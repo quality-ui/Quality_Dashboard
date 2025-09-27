@@ -1,0 +1,357 @@
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  FileCheck,
+  BarChart3,
+  Users,
+  Clock,
+  TrendingUp,
+  Activity,
+  AlertCircle,
+} from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { Layout } from "../components/layout";
+import "./Dashboardpage.css";
+
+export const DashboardPage = () => {
+  const { user, logout, token } = useAuth();
+  const navigate = useNavigate();
+
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalAdmins: 0,
+    recentSignups: 0,
+    totalChecklists: 0,
+    completedItems: 0,
+    pendingReviews: 0,
+    activeUsers: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // 🧠 Fetch dashboard stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/dashboard", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (data.success) {
+          setStats((prev) => ({
+            ...prev,
+            totalUsers: data.stats.totalUsers,
+            totalAdmins: data.stats.totalAdmins,
+            recentSignups: data.stats.recentSignups,
+          }));
+        } else {
+          setError(data.message || "Failed to load stats");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Server error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, [token]);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  // 📊 Dashboard cards
+  const cards = [
+    { name: "Total Checklists", value: stats.totalChecklists ?? 0, icon: FileCheck, color: "stat-icon blue" },
+    { name: "Completed Items", value: stats.completedItems ?? 0, icon: TrendingUp, color: "stat-icon green" },
+    { name: "Pending Reviews", value: stats.pendingReviews ?? 0, icon: Clock, color: "stat-icon amber" },
+    { name: "Active Users", value: stats.totalUsers ?? 0, icon: Users, color: "stat-icon purple" },
+    { name: "Admins", value: stats.totalAdmins ?? 0, icon: Users, color: "stat-icon pink" },
+    { name: "New Signups (7d)", value: stats.recentSignups ?? 0, icon: TrendingUp, color: "stat-icon orange" },
+  ];
+
+  // 🩺 ICU QA Parameters
+  const qaData = [
+    { parameter: "GCS Documentation Compliance", unit: "% of ICU patients with GCS documented every 8h", target: "≥95", freq: "Daily / Weekly", staff: "ICU Nurse" },
+    { parameter: "Unplanned Extubation", unit: "Number per 100 ventilator days", target: "0", freq: "Monthly", staff: "Respiratory Therapist / ICU Team" },
+    { parameter: "Central Line Removal due to Infection", unit: "Number per 100 central line days", target: "<2", freq: "Monthly", staff: "ICU Nurse / Infection Control" },
+    { parameter: "Daily Fluid Balance Documentation", unit: "% compliance", target: "≥95", freq: "Daily", staff: "ICU Nurse" },
+    { parameter: "ET Tube Cuff Pressure Monitoring", unit: "% of patients with cuff pressure checked every 8h", target: "≥95", freq: "Daily", staff: "ICU Nurse / RT" },
+    { parameter: "Time to Correct Hypotension After Onset", unit: "Average minutes to achieve MAP >65 mmHg", target: "<30", freq: "Daily", staff: "ICU Resident / Nurse" },
+    { parameter: "Hypoglycemic Events", unit: "Number per 30 ICU days", target: "0", freq: "Monthly", staff: "ICU Nurse / Resident" },
+  ];
+
+  const [qaValues, setQaValues] = useState(Array(qaData.length).fill(""));
+  const handleValueChange = (index, value) => {
+    const newValues = [...qaValues];
+    newValues[index] = value;
+    setQaValues(newValues);
+  };
+
+  // ✅ Surgery QA Checklist States
+  const [surgeryDate, setSurgeryDate] = useState("");
+  const [auditor, setAuditor] = useState("");
+  const [surgeryChecklist, setSurgeryChecklist] = useState([
+    { section: "Pre-op" },
+    { parameter: "Pre-op checklist completed", checked: false, compliant: "", remarks: "" },
+    { parameter: "Informed consent documented", checked: false, compliant: "", remarks: "" },
+    { parameter: "Pre-op antibiotics given within 60 min before incision", checked: false, compliant: "", remarks: "" },
+    { section: "Intra-op" },
+    { parameter: "WHO surgical safety checklist compliance", checked: false, compliant: "", remarks: "" },
+    { parameter: "Sponge / instrument count accurate", checked: false, compliant: "", remarks: "" },
+    { section: "Post-op" },
+    { parameter: "Surgical site infection rate monitored", checked: false, compliant: "", remarks: "" },
+    { parameter: "Unplanned reoperation within 48 hrs documented", checked: false, compliant: "", remarks: "" },
+    { parameter: "Post-op pain assessment documented", checked: false, compliant: "", remarks: "" },
+  ]);
+
+  const handleCheck = (idx, checked) => {
+    const updated = [...surgeryChecklist];
+    updated[idx].checked = checked;
+    setSurgeryChecklist(updated);
+  };
+
+  const handleCompliance = (idx, val) => {
+    const updated = [...surgeryChecklist];
+    updated[idx].compliant = val;
+    setSurgeryChecklist(updated);
+  };
+
+  const handleRemarks = (idx, val) => {
+    const updated = [...surgeryChecklist];
+    updated[idx].remarks = val;
+    setSurgeryChecklist(updated);
+  };
+
+  const totalItems = surgeryChecklist.filter((i) => i.parameter).length;
+  const compliantCount = surgeryChecklist.filter((i) => i.compliant === "Y").length;
+  const compliancePercent = totalItems ? Math.round((compliantCount / totalItems) * 100) : 0;
+
+  const handleSubmitSurgeryQA = async () => {
+    const payload = {
+      date: surgeryDate,
+      auditor,
+      compliancePercent,
+      checklist: surgeryChecklist.filter((i) => i.parameter),
+    };
+
+    try {
+      await fetch("http://localhost:5000/api/surgeryqa", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      localStorage.setItem("surgeryQAReport", JSON.stringify(payload));
+      alert("✅ Surgery QA Checklist saved successfully!");
+      navigate("/reports");
+    } catch (err) {
+      console.error("Error saving Surgery QA:", err);
+      alert("❌ Failed to save report");
+    }
+  };
+
+  return (
+    <Layout title="Dashboard">
+      <div className="dashboard-container">
+        {/* ✅ Welcome Header */}
+        <div className="welcome-header">
+          <h2>Welcome, {user?.name} 👋</h2>
+          <p>You are logged in as <b>{user?.role}</b></p>
+          <button onClick={handleLogout} className="logout-btn">Logout</button>
+        </div>
+
+        {loading ? (
+          <div className="loading">Loading dashboard...</div>
+        ) : error ? (
+          <div className="error-message"><AlertCircle className="h-5 w-5 text-red-500" />{error}</div>
+        ) : (
+          <>
+            {/* ✅ Stats Grid */}
+            <div className="stats-grid">
+              {cards.map((stat) => (
+                <div key={stat.name} className="stat-card">
+                  <div className="stat-content">
+                    <div className={`${stat.color}`}>
+                      <stat.icon className="h-6 w-6" />
+                    </div>
+                    <div className="stat-text">
+                      <p className="stat-name">{stat.name}</p>
+                      <p className="stat-value">{stat.value}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ✅ Quick Actions */}
+            <div className="quick-actions">
+              <div className="quick-actions-header">Quick Actions</div>
+              <div className="quick-actions-grid">
+                <Link to="/checklist" className="quick-action-card bg-blue-gradient">
+                  <div className="flex-between">
+                    <div>
+                      <h4>NC Checklist</h4>
+                      <p>Create and manage your non-conformity checklists</p>
+                    </div>
+                    <FileCheck className="h-8 w-8 text-white" />
+                  </div>
+                </Link>
+
+                <Link to="/kpipage" className="quick-action-card bg-purple-gradient">
+                  <div className="flex-between">
+                    <div>
+                      <h4 style={{ color: "white" }}>KPI Page</h4>
+                      <p>Manage KPI tracking and updates</p>
+                    </div>
+                    <TrendingUp className="h-8 w-8 text-white" />
+                  </div>
+                </Link>
+                <Link to="/surgery" className="quick-action-card bg-red-gradient">
+                <div className="flex-between">
+                  <div>
+                    <h4>Surgery QA Checklist</h4>
+                    <p>Audit surgical processes and compliance</p>
+                  </div>
+                  <Activity className="h-8 w-8 text-white" />
+                </div>
+              </Link>
+
+              <Link to="/anaethesia" className="quick-action-card bg-gray-gradient">
+              <div className="flex-between">
+                <div>
+                  <h4>Anaesthesia QA Checklist</h4>
+                   <p>Evaluate anaesthesia quality and safety</p>
+                </div>
+               <Activity className="h-8 w-8 text-white" />
+              </div>
+              </Link>
+
+
+                <Link to="/reports" className="quick-action-card bg-green-gradient">
+                  <div className="flex-between">
+                    <div>
+                      <h4>Reports</h4>
+                      <p>View and export comprehensive reports</p>
+                    </div>
+                    <BarChart3 className="h-8 w-8 text-white" />
+                  </div>
+                </Link>
+              </div>
+            </div>
+
+            {/* ✅ ICU QA Dashboard */}
+            <div className="qa-dashboard">
+              <h2>ICU QA Dashboard</h2>
+              <table className="qa-table">
+                <thead>
+                  <tr>
+                    <th>QA Parameter</th>
+                    <th>Measurement / Unit</th>
+                    <th>Target</th>
+                    <th>Input Value</th>
+                    <th>Frequency of Review</th>
+                    <th>Responsible Staff</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {qaData.map((row, idx) => {
+                    const value = qaValues[idx] || "";
+                    const targetValue = parseFloat(row.target.replace(/[^\d.]/g, ""));
+                    const isMet =
+                      row.target.includes("≥")
+                        ? Number(value) >= targetValue
+                        : row.target.includes("<")
+                        ? Number(value) < targetValue
+                        : Number(value) === targetValue;
+
+                    return (
+                      <tr key={idx}>
+                        <td>{row.parameter}</td>
+                        <td>{row.unit}</td>
+                        <td>{row.target}</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={value}
+                            placeholder="Enter value"
+                            onChange={(e) => handleValueChange(idx, e.target.value)}
+                            className="qa-input"
+                          />
+                        </td>
+                        <td>{row.freq}</td>
+                        <td>{row.staff}</td>
+                        <td
+                          className={
+                            value === ""
+                              ? "qa-status-pending"
+                              : isMet
+                              ? "qa-status-met"
+                              : "qa-status-notmet"
+                          }
+                        >
+                          {value === ""
+                            ? "—"
+                            : isMet
+                            ? "✅ Met"
+                            : "❌ Not Met"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            
+
+            {/* ✅ Recent Activity */}
+            <div className="recent-activity">
+              <div className="recent-header">
+                <Activity className="h-5 w-5 text-gray-500" />
+                <h3>Recent Activity</h3>
+              </div>
+              <div className="recent-list">
+                <div className="activity-item">
+                  <div className="activity-dot dot-green"></div>
+                  <div className="activity-text">
+                    <p className="activity-title">
+                      New checklist item created: "Equipment Safety Check"
+                    </p>
+                    <p className="activity-time">2 minutes ago</p>
+                  </div>
+                </div>
+
+                <div className="activity-item">
+                  <div className="activity-dot dot-blue"></div>
+                  <div className="activity-text">
+                    <p className="activity-title">
+                      File uploaded for "Quality Control Verification"
+                    </p>
+                    <p className="activity-time">15 minutes ago</p>
+                  </div>
+                </div>
+
+                <div className="activity-item">
+                  <div className="activity-dot dot-amber"></div>
+                  <div className="activity-text">
+                    <p className="activity-title">
+                      Checklist item updated: "Process Documentation"
+                    </p>
+                    <p className="activity-time">1 hour ago</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </Layout>
+  );
+};
