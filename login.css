@@ -1,0 +1,83 @@
+/* src/pages/auth.css */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #eef2f3;
+}
+
+.auth-form {
+  background: #fff;
+  padding: 2rem 2.5rem;
+  border-radius: 12px;
+  width: 360px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.auth-form h2 {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.auth-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.auth-form label {
+  font-weight: 500;
+  color: #444;
+}
+
+.auth-form input {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 300px;
+}
+
+.auth-form button {
+  padding: 0.6rem;
+  background: #007bff;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.auth-form button:hover {
+  background: #0056b3;
+}
+
+.auth-form .admin-btn {
+  background: #28a745;
+}
+
+.auth-form .admin-btn:hover {
+  background: #1e7e34;
+}
+
+.text-center {
+  text-align: center;
+  margin-top: 0.8rem;
+}
+
+.link {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.error-msg {
+  color: red;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
