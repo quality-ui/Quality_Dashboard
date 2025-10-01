@@ -150,6 +150,10 @@ button:hover {
 .bg-gray-gradient {
   background: linear-gradient(135deg, gray, gray);
 }
+
+.bg-brown-gradient {
+  background: linear-gradient(135deg, brown, brown);
+}
 .flex-between {
   display: flex;
   justify-content: space-between;

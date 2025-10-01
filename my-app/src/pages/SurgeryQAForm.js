@@ -95,7 +95,7 @@ export const SurgeryQAForm = () => {
             <tr>
               <th>QA Parameter</th>
               <th>Check</th>
-              <th>Compliant (Y/N)</th>
+              <th>Compliance (Y/N)</th>
               <th>Remarks / Action</th>
             </tr>
           </thead>
@@ -143,7 +143,7 @@ export const SurgeryQAForm = () => {
 
         <div className="summary-row">
           <p>
-            Compliant Items: <b>{compliantCount}</b> / {totalItems} &nbsp; | &nbsp;
+            Compliance Items: <b>{compliantCount}</b> / {totalItems} &nbsp; | &nbsp;
             % Compliance: <b>{compliancePercent}%</b>
           </p>
         </div>

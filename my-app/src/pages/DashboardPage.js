@@ -231,6 +231,26 @@ export const DashboardPage = () => {
                <Activity className="h-8 w-8 text-white" />
               </div>
               </Link>
+                <Link to="/bloodstorage-qa" className="quick-action-card bg-brown-gradient">
+                <div className="flex-between">
+                  <div>
+                    <h4>Blood Storage Unit QA Checklist</h4>
+                    <p>Manage and audit blood storage safety & compliance </p>
+                  </div>
+                  <Activity className="h-8 w-8 text-white" />
+                </div>
+              </Link>
+
+
+              <Link to="/icudashboard" className="quick-action-card bg-brown-gradient">
+                <div className="flex-between">
+                  <div>
+                    <h4>ICUDashboard QA Checklist</h4>
+                    <p> </p>
+                  </div>
+                  <Activity className="h-8 w-8 text-white" />
+                </div>
+              </Link>
 
 
                 <Link to="/reports" className="quick-action-card bg-green-gradient">
@@ -245,69 +265,9 @@ export const DashboardPage = () => {
               </div>
             </div>
 
-            {/* ✅ ICU QA Dashboard */}
-            <div className="qa-dashboard">
-              <h2>ICU QA Dashboard</h2>
-              <table className="qa-table">
-                <thead>
-                  <tr>
-                    <th>QA Parameter</th>
-                    <th>Measurement / Unit</th>
-                    <th>Target</th>
-                    <th>Input Value</th>
-                    <th>Frequency of Review</th>
-                    <th>Responsible Staff</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {qaData.map((row, idx) => {
-                    const value = qaValues[idx] || "";
-                    const targetValue = parseFloat(row.target.replace(/[^\d.]/g, ""));
-                    const isMet =
-                      row.target.includes("≥")
-                        ? Number(value) >= targetValue
-                        : row.target.includes("<")
-                        ? Number(value) < targetValue
-                        : Number(value) === targetValue;
-
-                    return (
-                      <tr key={idx}>
-                        <td>{row.parameter}</td>
-                        <td>{row.unit}</td>
-                        <td>{row.target}</td>
-                        <td>
-                          <input
-                            type="number"
-                            value={value}
-                            placeholder="Enter value"
-                            onChange={(e) => handleValueChange(idx, e.target.value)}
-                            className="qa-input"
-                          />
-                        </td>
-                        <td>{row.freq}</td>
-                        <td>{row.staff}</td>
-                        <td
-                          className={
-                            value === ""
-                              ? "qa-status-pending"
-                              : isMet
-                              ? "qa-status-met"
-                              : "qa-status-notmet"
-                          }
-                        >
-                          {value === ""
-                            ? "—"
-                            : isMet
-                            ? "✅ Met"
-                            : "❌ Not Met"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+          
+              
+                
 
             
 

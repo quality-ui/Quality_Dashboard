@@ -14,6 +14,8 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { AdminPage } from "./pages/AdminPage";
 import { AnaesthesiaQAForm } from "./pages/AnaesthesiaQAForm";
 import { SurgeryQAForm } from "./pages/SurgeryQAForm";
+import { BloodStorageQAPage } from "./pages/BloodStorageQAPage";
+import { ICUDashboard } from "./pages/ICUDashboard";
 
 
 function App() {
@@ -38,6 +40,8 @@ function App() {
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/anaethesia" element={<AnaesthesiaQAForm />}/>
             <Route path="/surgery" element={<SurgeryQAForm />}/>
+            <Route path="/bloodstorage-qa" element={<BloodStorageQAPage />} />
+             <Route path="/icudashboard" element={<ICUDashboard />} />
 
             {/* Admin Dashboard */}
             <Route path="/admin" element={<AdminPage />} />

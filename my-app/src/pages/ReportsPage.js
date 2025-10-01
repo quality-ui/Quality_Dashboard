@@ -10,29 +10,28 @@ export const ReportsPage = () => {
   const [kpiReports, setKpiReports] = useState([]);
   const [surgeryReports, setSurgeryReports] = useState([]);
   const [anaesthesiaReports, setAnaesthesiaReports] = useState([]);
+  const [bloodStorageReports, setBloodStorageReports] = useState([]);
 
   // ✅ Load reports from localStorage
   useEffect(() => {
     try {
-      // Checklist Reports
-      const storedChecklists = JSON.parse(localStorage.getItem("reports") || "[]");
-      setChecklistReports(storedChecklists);
+      setChecklistReports(JSON.parse(localStorage.getItem("reports") || "[]"));
+      setKpiReports(JSON.parse(localStorage.getItem("kpiReports") || "[]"));
 
-      // KPI Reports
-      const storedKpi = JSON.parse(localStorage.getItem("kpiReports") || "[]");
-      setKpiReports(storedKpi);
+      const storedSurgery = JSON.parse(localStorage.getItem("surgeryQAReport"));
+      if (storedSurgery) setSurgeryReports(Array.isArray(storedSurgery) ? storedSurgery : [storedSurgery]);
 
-      // Surgery QA Reports
-      const storedSurgery = localStorage.getItem("surgeryQAReport");
-      if (storedSurgery) setSurgeryReports([JSON.parse(storedSurgery)]);
+      const storedAnaesthesia = JSON.parse(localStorage.getItem("anaesthesiaQAReport"));
+      if (storedAnaesthesia) setAnaesthesiaReports(Array.isArray(storedAnaesthesia) ? storedAnaesthesia : [storedAnaesthesia]);
 
-      // Anaesthesia QA Reports
-      const storedAnaesthesia = localStorage.getItem("anaesthesiaQAReport");
-      if (storedAnaesthesia) setAnaesthesiaReports([JSON.parse(storedAnaesthesia)]);
+      const storedBloodStorage = JSON.parse(localStorage.getItem("bloodStorageQAReport"));
+      if (storedBloodStorage) setBloodStorageReports(Array.isArray(storedBloodStorage) ? storedBloodStorage : [storedBloodStorage]);
     } catch (err) {
       console.error("Error loading reports:", err);
     }
   }, []);
+
+  
 
   // ✅ Excel Download
   const handleDownloadExcel = (report, type) => {
@@ -43,12 +42,14 @@ export const ReportsPage = () => {
         report.rows.map((row) => ({
           Title: report.title,
           "Audit Date": report.auditDate,
-          File: report.file || "",
           "Check Point": row.checkpoint,
           "Verified By": row.verifiedBy,
           Evidence: row.evidence,
-        }))
-      );
+          Compliance: row.compliance,
+          "File Name": row.file || "", // ✅ show file name in Excel
+  }))
+);
+
     } else if (type === "KPI") {
       worksheet = XLSX.utils.json_to_sheet([
         {
@@ -58,7 +59,7 @@ export const ReportsPage = () => {
           "Raw Data": report.rawData,
         },
       ]);
-    } else if (type === "Surgery" || type === "Anaesthesia") {
+    } else {
       worksheet = XLSX.utils.json_to_sheet(
         report.checklist.map((item) => ({
           Date: report.date,
@@ -94,7 +95,7 @@ export const ReportsPage = () => {
     } else if (type === "KPI") {
       csvContent += "Month,Department,KPI Sheet,Raw Data\n";
       csvContent += `"${report.month}","${report.department}","${report.kpiSheet}","${report.rawData}"\n`;
-    } else if (type === "Surgery" || type === "Anaesthesia") {
+    } else {
       csvContent += "Date,Auditor,QA Parameter,Checked,Compliant,Remarks\n";
       report.checklist.forEach((item) => {
         csvContent += `"${report.date}","${report.auditor}","${item.parameter}","${item.checked ? "Yes" : "No"}","${item.compliant}","${item.remarks}"\n`;
@@ -113,149 +114,127 @@ export const ReportsPage = () => {
     URL.revokeObjectURL(url);
   };
 
+
+
+  // 🗑️ Delete Report
+  const handleDeleteReport = (type, index) => {
+    if (!window.confirm("Are you sure you want to delete this report?")) return;
+    let updatedReports = [];
+
+    switch (type) {
+      case "Surgery":
+        updatedReports = surgeryReports.filter((_, i) => i !== index);
+        setSurgeryReports(updatedReports);
+        localStorage.setItem("surgeryQAReport", JSON.stringify(updatedReports));
+        break;
+      case "Anaesthesia":
+        updatedReports = anaesthesiaReports.filter((_, i) => i !== index);
+        setAnaesthesiaReports(updatedReports);
+        localStorage.setItem("anaesthesiaQAReport", JSON.stringify(updatedReports));
+        break;
+      case "Checklist":
+        updatedReports = checklistReports.filter((_, i) => i !== index);
+        setChecklistReports(updatedReports);
+        localStorage.setItem("reports", JSON.stringify(updatedReports));
+        break;
+      case "KPI":
+        updatedReports = kpiReports.filter((_, i) => i !== index);
+        setKpiReports(updatedReports);
+        localStorage.setItem("kpiReports", JSON.stringify(updatedReports));
+        break;
+      case "BloodStorage":
+        updatedReports = bloodStorageReports.filter((_, i) => i !== index);
+        setBloodStorageReports(updatedReports);
+        localStorage.setItem("bloodStorageQAReport", JSON.stringify(updatedReports));
+        break;
+      default:
+        break;
+    }
+  };
+
+  // ✏️ Edit Report (redirect to form)
+  const handleEditReport = (type, index) => {
+    const reportData =
+      type === "Surgery"
+        ? surgeryReports[index]
+        : type === "Anaesthesia"
+        ? anaesthesiaReports[index]
+        : type === "Checklist"
+        ? checklistReports[index]
+        : type === "BloodStorage"
+        ? bloodStorageReports[index]
+        : kpiReports[index];
+
+    localStorage.setItem("editingReport", JSON.stringify({ type, data: reportData }));
+
+    if (type === "Surgery") window.location.href = "/surgery-qa";
+    if (type === "Anaesthesia") window.location.href = "/anaesthesia-qa";
+    if (type === "Checklist") window.location.href = "/checklist";
+    if (type === "KPI") window.location.href = "/kpipage";
+    if (type === "BloodStorage") window.location.href = "/blood-storage-qa";
+  };
+
   return (
     <Layout title="Reports">
       <div className="space-y-10">
 
         {/* ✅ Checklist Reports */}
-        <div className="bg-white shadow rounded-lg border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800">Checklist Reports</h3>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {checklistReports.length === 0 ? (
-              <p className="px-6 py-4 text-sm text-gray-500">No checklist reports available.</p>
-            ) : (
-              checklistReports.map((report) => (
-                <div
-                  key={report.id}
-                  className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
-                >
-                  <div>
-                    <p className="font-medium">{report.title}</p>
-                    <p className="text-xs text-gray-500">
-                      {report.auditDate} • {report.rows.length} checkpoints
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleDownloadExcel(report, "Checklist")} className="btn-excel">
-                      <Download className="h-4 w-4 mr-1" /> Excel
-                    </button>
-                    <button onClick={() => handleDownloadCSV(report, "Checklist")} className="btn-csv">
-                      <Download className="h-4 w-4 mr-1" /> CSV
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        {renderSection("Checklist Reports", checklistReports, "Checklist")}
 
         {/* ✅ KPI Reports */}
-        <div className="bg-white shadow rounded-lg border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800">KPI Reports</h3>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {kpiReports.length === 0 ? (
-              <p className="px-6 py-4 text-sm text-gray-500">No KPI reports available.</p>
-            ) : (
-              kpiReports.map((report) => (
-                <div
-                  key={report.id}
-                  className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {report.month} – {report.department}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      KPI Sheet: {report.kpiSheet} • Raw Data: {report.rawData}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleDownloadExcel(report, "KPI")} className="btn-excel">
-                      <Download className="h-4 w-4 mr-1" /> Excel
-                    </button>
-                    <button onClick={() => handleDownloadCSV(report, "KPI")} className="btn-csv">
-                      <Download className="h-4 w-4 mr-1" /> CSV
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        {renderSection("KPI Reports", kpiReports, "KPI")}
 
         {/* ✅ Surgery QA Reports */}
-        <div className="bg-white shadow rounded-lg border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800">Surgery QA Reports</h3>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {surgeryReports.length === 0 ? (
-              <p className="px-6 py-4 text-sm text-gray-500">No surgery QA reports available.</p>
-            ) : (
-              surgeryReports.map((report, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
-                >
-                  <div>
-                    <p className="font-medium">Surgery QA – {report.date}</p>
-                    <p className="text-xs text-gray-500">
-                      Auditor: {report.auditor} • Compliance: {report.compliancePercent}%
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleDownloadExcel(report, "Surgery")} className="btn-excel">
-                      <Download className="h-4 w-4 mr-1" /> Excel
-                    </button>
-                    <button onClick={() => handleDownloadCSV(report, "Surgery")} className="btn-csv">
-                      <Download className="h-4 w-4 mr-1" /> CSV
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        {renderSection("Surgery QA Reports", surgeryReports, "Surgery")}
 
         {/* ✅ Anaesthesia QA Reports */}
-        <div className="bg-white shadow rounded-lg border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800">Anaesthesia QA Reports</h3>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {anaesthesiaReports.length === 0 ? (
-              <p className="px-6 py-4 text-sm text-gray-500">No anaesthesia QA reports available.</p>
-            ) : (
-              anaesthesiaReports.map((report, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
-                >
-                  <div>
-                    <p className="font-medium">Anaesthesia QA – {report.date}</p>
-                    <p className="text-xs text-gray-500">
-                      Auditor: {report.auditor} • Compliance: {report.compliancePercent}%
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleDownloadExcel(report, "Anaesthesia")} className="btn-excel">
-                      <Download className="h-4 w-4 mr-1" /> Excel
-                    </button>
-                    <button onClick={() => handleDownloadCSV(report, "Anaesthesia")} className="btn-csv">
-                      <Download className="h-4 w-4 mr-1" /> CSV
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        {renderSection("Anaesthesia QA Reports", anaesthesiaReports, "Anaesthesia")}
 
+        {/* ✅ Blood Storage QA Reports */}
+        {renderSection("Blood Storage QA Reports", bloodStorageReports, "BloodStorage")}
       </div>
     </Layout>
   );
+
+  
+
+  // 🔁 Helper render function
+  function renderSection(title, data, type) {
+    return (
+      <div className="bg-white shadow rounded-lg border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+        </div>
+        <div className="divide-y divide-gray-100">
+          {data.length === 0 ? (
+            <p className="px-6 py-4 text-sm text-gray-500">No {type.toLowerCase()} reports available.</p>
+          ) : (
+            data.map((report, idx) => (
+              <div key={idx} className="flex items-center justify-between px-6 py-4 hover:bg-gray-50">
+                <div>
+                  <p className="font-medium">
+                    {type} – {report.date || report.month || report.title}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {report.auditor ? `Auditor: ${report.auditor}` : ""}{" "}
+                    {report.compliancePercent ? `• Compliance: ${report.compliancePercent}%` : ""}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => handleEditReport(type, idx)} className="btn-edit">✏️ Edit</button>
+                  <button onClick={() => handleDeleteReport(type, idx)} className="btn-delete">🗑️ Delete</button>
+                  <button onClick={() => handleDownloadExcel(report, type)} className="btn-excel">
+                    <Download className="h-4 w-4 mr-1" /> Excel
+                  </button>
+                  <button onClick={() => handleDownloadCSV(report, type)} className="btn-csv">
+                    <Download className="h-4 w-4 mr-1" /> CSV
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  }
 };

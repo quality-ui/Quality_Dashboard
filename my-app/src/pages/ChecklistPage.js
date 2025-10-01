@@ -1,149 +1,162 @@
 import React, { useState } from "react";
 import { Layout } from "../components/layout";
 import "./ChecklistPage.css";
-import { useDashboard } from "../contexts/DashboardContext";
 
 export const ChecklistPage = () => {
   const [title, setTitle] = useState("");
   const [auditDate, setAuditDate] = useState("");
-  const [conformity, setConformity] = useState("conformity");
   const [rows, setRows] = useState([
-    { checkpoint: "", verifiedBy: "", evidence: "", status: "Pending" },
+    { checkpoint: "", verifiedBy: "", evidence: "", compliance: "Compliant", file: null },
   ]);
-  const [file, setFile] = useState(null);
 
-  const { setTotalChecklists, setCompletedItems, setPendingReviews } =
-    useDashboard();
-
-  const handleAddRow = () => {
-    setRows([
-      ...rows,
-      { checkpoint: "", verifiedBy: "", evidence: "", status: "Pending" },
-    ]);
+  // ➕ Add New Row
+  const addRow = () => {
+    setRows([...rows, { checkpoint: "", verifiedBy: "", evidence: "", compliance: "Compliant", file: null }]);
   };
 
-  const handleChangeRow = (index, field, value) => {
-    const updated = [...rows];
-    updated[index][field] = value;
-    setRows(updated);
+  // 🗑️ Remove Row
+  const removeRow = (index) => {
+    setRows(rows.filter((_, i) => i !== index));
   };
 
-  const handleSave = () => {
-    const report = {
+  // 📝 Handle Row Change
+  const handleRowChange = (index, field, value) => {
+    const updatedRows = [...rows];
+    updatedRows[index][field] = value;
+    setRows(updatedRows);
+  };
+
+  // 📂 Handle File Upload
+  const handleFileUpload = (index, file) => {
+    const updatedRows = [...rows];
+    updatedRows[index].file = file ? file.name : null; // store only filename
+    setRows(updatedRows);
+  };
+
+  // 💾 Submit Checklist
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!title || !auditDate) {
+      alert("Please fill Title and Audit Date");
+      return;
+    }
+
+    const newReport = {
       id: Date.now(),
       title,
       auditDate,
       rows,
-      file: file?.name || null,
-      conformity,
     };
 
-    // ✅ Save in localStorage
     const existing = JSON.parse(localStorage.getItem("reports") || "[]");
-    const updatedReports = [...existing, report];
-    localStorage.setItem("reports", JSON.stringify(updatedReports));
+    existing.push(newReport);
+    localStorage.setItem("reports", JSON.stringify(existing));
 
-    // ✅ Update dashboard stats
-    setTotalChecklists(updatedReports.length);
-
-    let completed = 0;
-    let pending = 0;
-    updatedReports.forEach((rep) => {
-      rep.rows.forEach((row) => {
-        if (row.status === "Completed") completed++;
-        else pending++;
-      });
-    });
-
-    setCompletedItems(completed);
-    setPendingReviews(pending);
-
-    // ✅ Reset form
-    alert("Checklist saved!");
-    setTitle("");
-    setAuditDate("");
-    setRows([
-      { checkpoint: "", verifiedBy: "", evidence: "", status: "Pending" },
-    ]);
-    setFile(null);
-    setConformity("conformity");
+    alert("Checklist saved successfully ✅");
+    window.location.href = "/reports";
   };
 
   return (
     <Layout title="Checklist">
-      <div className="form-container">
-        <h2>Create Checklist</h2>
+      <form onSubmit={handleSubmit} className="checklist-form">
+        <div className="form-header">
+          <input
+            type="text"
+            placeholder="Enter Checklist Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+            className="input-title"
+          /><br></br><br></br><br></br>
+          <input
+            type="date"
+            value={auditDate}
+            onChange={(e) => setAuditDate(e.target.value)}
+            required
+            className="input-date"
+          /><br></br>
+        </div>
 
-        <label>Title</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+        <table className="checklist-table">
+          <thead>
+            <tr>
+              <th>Check Point</th>
+              <th>Verified By</th>
+              <th>Evidence / Remarks</th>
+              <th>Compliance</th>
+              <th>File</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, index) => (
+              <tr key={index}>
+                <td>
+                  <input
+                    type="text"
+                    placeholder="Enter checkpoint"
+                    value={row.checkpoint}
+                    onChange={(e) => handleRowChange(index, "checkpoint", e.target.value)}
+                    required
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    placeholder="Verified by"
+                    value={row.verifiedBy}
+                    onChange={(e) => handleRowChange(index, "verifiedBy", e.target.value)}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    placeholder="Enter evidence or remarks"
+                    value={row.evidence}
+                    onChange={(e) => handleRowChange(index, "evidence", e.target.value)}
+                  />
+                </td>
+                <td>
+                  <select
+                    value={row.compliance}
+                    onChange={(e) => handleRowChange(index, "compliance", e.target.value)}
+                  >
+                    <option value="Compliant">Compliance</option>
+                    <option value="Non-Compliant">Non-Compliance</option>
+                  </select>
+                </td>
+                <td>
+                  <input
+                    type="file"
+                    onChange={(e) => handleFileUpload(index, e.target.files[0])}
+                  />
+                  {row.file && (
+                    <span className="file-name">{row.file}</span>
+                  )}
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    className="btn-delete"
+                    onClick={() => removeRow(index)}
+                  >
+                    🗑️
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-        <label>Audit Date</label>
-        <input
-          type="date"
-          value={auditDate}
-          onChange={(e) => setAuditDate(e.target.value)}
-        />
-
-        <label>Upload File</label>
-        <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-
-        <label>Conformity</label>
-        <select
-          value={conformity}
-          onChange={(e) => setConformity(e.target.value)}
-        >
-          <option>conformity</option>
-          <option>Non-conformity</option>
-        </select>
-
-        <h3>Checklist Items</h3>
-        {rows.map((row, index) => (
-          <div key={index} className="row">
-            <input
-              type="text"
-              placeholder="Check Point"
-              value={row.checkpoint}
-              onChange={(e) =>
-                handleChangeRow(index, "checkpoint", e.target.value)
-              }
-            />
-            <input
-              type="text"
-              placeholder="Verified By"
-              value={row.verifiedBy}
-              onChange={(e) =>
-                handleChangeRow(index, "verifiedBy", e.target.value)
-              }
-            />
-            <input
-              type="text"
-              placeholder="Evidence"
-              value={row.evidence}
-              onChange={(e) =>
-                handleChangeRow(index, "evidence", e.target.value)
-              }
-            />
-            <select
-              value={row.status}
-              onChange={(e) =>
-                handleChangeRow(index, "status", e.target.value)
-              }
-            >
-              <option value="Pending">Pending</option>
-              <option value="Completed">Completed</option>
-            </select>
-          </div>
-        ))}
-
-        <button onClick={handleAddRow}>+ Add Row</button>
-        <button className="save-btn" onClick={handleSave}>
-          Save Checklist
-        </button>
-      </div>
+        <div className="form-actions">
+          <button type="button" className="btn-add" onClick={addRow}>
+            ➕ Add Row
+          </button>
+          <button type="submit" className="btn-submit">
+            💾 Save & View Report
+          </button>
+        </div>
+      </form>
     </Layout>
   );
 };

@@ -163,3 +163,26 @@ button.text-green-600:hover {
 .btn-pdf:hover {
   background: #fef2f2;
 }
+.btn-edit {
+  background-color: #facc15;
+  color: #000;
+  font-size: 0.85rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.btn-delete {
+  background-color: #ef4444;
+  color: #fff;
+  font-size: 0.85rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.btn-edit:hover {
+  background-color: #eab308;
+}
+
+.btn-delete:hover {
+  background-color: #dc2626;
+}

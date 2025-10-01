@@ -1,0 +1,4 @@
+[[redirects]]
+from="/*"
+to="/my-app/src/pages/LoginPage.js"
+status=200
