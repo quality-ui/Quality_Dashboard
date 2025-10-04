@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
-import db from "./db.js"; // ✅ your MySQL connection (using env vars)
+import db from "./db.js"; // ✅ MySQL connection
 
 import authRoutes from "./routes/auth.js";
 import adminRoutes from "./routes/admin.js";
@@ -23,7 +23,6 @@ const createAdminIfNotExists = async () => {
         "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
         ["Admin", "admin@example.com", hash, "admin"]
       );
-
       console.log("✅ Default admin created: admin@example.com / admin123");
     } else {
       console.log("✅ Admin already exists");
@@ -46,8 +45,16 @@ app.get("/", (req, res) => {
   res.send("🚀 Checklist Management Backend Running...");
 });
 
-// ✅ Start Server
-app.listen(PORT, async () => {
-  console.log(`✅ Server: http://localhost:${PORT}`);
-  await createAdminIfNotExists(); // ✅ call after DB connection
-});
+// ✅ Only run server locally, not on Vercel
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, async () => {
+    console.log(`✅ Local Server: http://localhost:${PORT}`);
+    await createAdminIfNotExists();
+  });
+} else {
+  // ✅ Run admin creation once on cold start in Vercel
+  createAdminIfNotExists();
+}
+
+// ✅ Export for Vercel Serverless
+export default app;
