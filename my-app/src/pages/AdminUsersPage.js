@@ -1,43 +1,28 @@
-import React, { useEffect, useState } from "react";
-import { Layout } from "../components/layout";
+// src/pages/AdminDashboard.js
+import React from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-export const AdminUsersPage = () => {
-  const [users, setUsers] = useState([]);
-
-  useEffect(() => {
-    fetch("http://localhost:5000/api/admin/users")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) setUsers(data.users);
-      })
-      .catch((err) => console.error(err));
-  }, []);
+const AdminDashboard = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   return (
-    <Layout title="Admin - Users">
-      <h2>Registered Users</h2>
-      <table className="user-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Created At</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.id}>
-              <td>{u.id}</td>
-              <td>{u.name}</td>
-              <td>{u.email}</td>
-              <td>{u.role}</td>
-              <td>{new Date(u.created_at).toLocaleString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </Layout>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Welcome, {user.name} (Admin)</h1>
+      <button
+        className="bg-red-500 text-white px-4 py-2 rounded-lg"
+        onClick={() => {
+          logout();
+          navigate("/");
+        }}
+      >
+        Logout
+      </button>
+
+      {/* TODO: Add user registration/edit/delete table here */}
+    </div>
   );
 };
+
+export default AdminDashboard;

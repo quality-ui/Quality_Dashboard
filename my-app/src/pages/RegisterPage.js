@@ -1,93 +1,81 @@
-// src/pages/RegisterPage.jsx
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import "./login.css"; // optional styling file
+import axios from "axios";
+import "./RegisterPage.css";
 
-export const RegisterPage = () => {
-  const [form, setForm] = useState({
+const RegisterPage = () => {
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
+    role: "user",
   });
   const [message, setMessage] = useState("");
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
-
     try {
-      const res = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+      const token = localStorage.getItem("token");
+      const res = await axios.post("http://localhost:5000/api/auth/register", formData, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setMessage(data.message || "Registration failed");
-        return;
-      }
-
-      setMessage("✅ Registered successfully! Redirecting...");
-      setTimeout(() => navigate("/login"), 1500);
+      setMessage(res.data.message || "User created successfully");
+      setFormData({ name: "", email: "", password: "", role: "user" });
     } catch (err) {
-      setMessage("❌ Server error");
-      console.error(err);
+      console.error("Register error:", err);
+      setMessage("Error creating user");
     }
   };
 
   return (
-    <div className="auth-container">
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <h2>Register</h2>
+    <div className="register-container">
+      <div className="register-card">
+        <h2>Create New User</h2>
+        <form onSubmit={handleSubmit} className="register-form">
+          <input
+            type="text"
+            name="name"
+            placeholder="Full Name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
 
-        <label>Name</label><br></br>
-        <input
-          type="text"
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-          placeholder="Enter your name"
-          required
-        /><br></br>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email Address"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
 
-        <label>Email</label><br></br>
-        <input
-          type="email"
-          name="email"
-          value={form.email}
-          onChange={handleChange}
-          placeholder="Enter your email"
-          required
-        /><br></br>
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
 
-        <label>Password</label><br></br>
-        <input
-          type="password"
-          name="password"
-          value={form.password}
-          onChange={handleChange}
-          placeholder="Enter your password"
-          required
-        /><br></br>
+          <select name="role" value={formData.role} onChange={handleChange}>
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
 
-        <button type="submit">Register</button>
+          <button type="submit" className="register-btn">
+            Create
+          </button>
+        </form>
 
-        {message && <p className="message">{message}</p>}
-
-        <p>
-          Already have an account?{" "}
-          <Link to="/login" className="link">
-            Login
-          </Link>
-        </p>
-      </form>
+        {message && <p className="register-message">{message}</p>}
+      </div>
     </div>
   );
 };
+
+export default RegisterPage;

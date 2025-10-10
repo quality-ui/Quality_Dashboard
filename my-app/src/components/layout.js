@@ -1,7 +1,7 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React ,{ useContext }from 'react';
+import { Link, useNavigate,  } from 'react-router-dom';
 import { LogOut, FileCheck, BarChart3, Home } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import {  useAuth } from '../contexts/AuthContext';
 import './layout.css'; // ✅ Custom CSS file for styling
 
 export const Layout = ({ children, title }) => {

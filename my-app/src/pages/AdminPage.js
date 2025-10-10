@@ -1,5 +1,6 @@
-// src/pages/AdminPage.jsx
+// src/pages/AdminPage.js
 import React, { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ FIXED IMPORT
 import "./AdminPage.css";
 
 export const AdminPage = () => {
@@ -9,11 +10,12 @@ export const AdminPage = () => {
   const [sortField, setSortField] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // 👈 Change as needed
+  const itemsPerPage = 5;
+  const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
 
-  // Fetch all users
+  // ✅ Fetch all users
   const fetchUsers = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/admin/users", {
@@ -102,6 +104,13 @@ export const AdminPage = () => {
   return (
     <div className="admin-container">
       <h2>Admin Dashboard</h2>
+
+      <div className="admin-actions">
+        {/* ✅ navigate() now works */}
+        <button onClick={() => navigate("/register")} className="register-btn">
+          ➕ Register New User
+        </button>
+      </div>
 
       {/* 🔍 Search */}
       <div className="table-controls">

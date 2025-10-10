@@ -1,60 +1,49 @@
 // backend/routes/admin.js
 import express from "express";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import db from "../db.js";
+import { verifyToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// 🔐 Middleware to verify admin
-const verifyAdmin = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader)
-    return res.status(401).json({ success: false, message: "No token" });
-
-  const token = authHeader.split(" ")[1];
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== "admin") {
-      return res.status(403).json({ success: false, message: "Not authorized" });
-    }
-
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(401).json({ success: false, message: "Invalid token" });
-  }
-};
-
-// 📋 Get all users (Admin only)
-router.get("/users", verifyAdmin, async (req, res) => {
+/**
+ * ✅ GET /api/admin/users
+ * Get all users (admin only)
+ */
+router.get("/users", verifyToken, async (req, res) => {
   try {
     const [rows] = await db.query(
       "SELECT id, name, email, role, created_at FROM users"
     );
-    res.json(rows); // ✅ return array (not {rows})
+    res.json(rows);
   } catch (err) {
     console.error("Fetch users error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
-// 🗑️ Delete user (Admin only)
-router.delete("/users/:id", verifyAdmin, async (req, res) => {
+/**
+ * 🗑️ DELETE /api/admin/users/:id
+ * Delete user by ID (admin only)
+ */
+router.delete("/users/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     await db.query("DELETE FROM users WHERE id = ?", [id]);
-    res.json({ success: true, message: "User deleted" });
+    res.json({ success: true, message: "User deleted successfully" });
   } catch (err) {
     console.error("Delete user error:", err);
-    res.status(500).json({ success: false, message: "Failed to delete user" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to delete user" });
   }
 });
 
-// ✏️ Update user (Admin only)
-router.put("/users/:id", verifyAdmin, async (req, res) => {
+/**
+ * ✏️ PUT /api/admin/users/:id
+ * Update user details (admin only)
+ */
+router.put("/users/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, email, password, role } = req.body;
@@ -75,7 +64,9 @@ router.put("/users/:id", verifyAdmin, async (req, res) => {
     res.json({ success: true, message: "User updated successfully" });
   } catch (err) {
     console.error("Update user error:", err);
-    res.status(500).json({ success: false, message: "Failed to update user" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update user" });
   }
 });
 

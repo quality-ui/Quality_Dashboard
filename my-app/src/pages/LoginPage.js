@@ -1,40 +1,59 @@
 // src/pages/LoginPage.js
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import "./login.css";
 
-export const LoginPage = () => {
+const LoginPage = () => {
+  const navigate = useNavigate();
   const { login } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [adminEmail, setAdminEmail] = useState("");
-  const [adminPassword, setAdminPassword] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState("");
 
-  const handleUserLogin = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const data = await login(email, password);
-    if (!data.success) setError(data.message);
-  };
+    const res = await login(email, password, isAdmin);
 
-  const handleAdminLogin = async (e) => {
-    e.preventDefault();
-    const data = await login(adminEmail, adminPassword);
-    if (!data.success) setError(data.message);
+    if (res.success) {
+      if (res.role === "admin") {
+        navigate("/adminpage");
+      } else {
+        navigate("/dashboard");
+      }
+    } else {
+      setError(res.message);
+    }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-form">
-        <h2>User Login</h2>
-        {error && <p className="error-msg">{error}</p>}
+    <div className="login-container">
+      <div className="login-card">
+        <h2>{isAdmin ? "Admin Login" : "User Login"}</h2>
 
-        <form onSubmit={handleUserLogin}>
+        <div className="toggle-buttons">
+          <button
+            className={`toggle-btn ${!isAdmin ? "active" : ""}`}
+            onClick={() => setIsAdmin(false)}
+          >
+            User Login
+          </button>
+          <button
+            className={`toggle-btn ${isAdmin ? "active" : ""}`}
+            onClick={() => setIsAdmin(true)}
+          >
+            Admin Login
+          </button>
+        </div>
+
+        <form onSubmit={handleLogin} className="login-form">
           <label>Email</label>
           <input
             type="email"
+            placeholder="Enter your email"
             value={email}
-            placeholder="Enter user email"
             onChange={(e) => setEmail(e.target.value)}
             required
           />
@@ -42,49 +61,23 @@ export const LoginPage = () => {
           <label>Password</label>
           <input
             type="password"
+            placeholder="Enter your password"
             value={password}
-            placeholder="Enter password"
             onChange={(e) => setPassword(e.target.value)}
             required
           />
 
-          <button type="submit">Login</button>
-        </form>
+          {error && <p className="error-text">{error}</p>}
 
-        <p className="text-center">
-          Don’t have an account?{" "}
-          <a href="/register" className="link">
-            Register
-          </a>
-        </p>
-
-        <hr style={{ margin: "1rem 0" }} />
-
-        <h2>Admin Login</h2>
-        <form onSubmit={handleAdminLogin}>
-          <label>Admin Email</label>
-          <input
-            type="email"
-            value={adminEmail}
-            placeholder="Enter admin email"
-            onChange={(e) => setAdminEmail(e.target.value)}
-            required
-          />
-
-          <label>Password</label>
-          <input
-            type="password"
-            value={adminPassword}
-            placeholder="Enter admin password"
-            onChange={(e) => setAdminPassword(e.target.value)}
-            required
-          />
-
-          <button type="submit" className="admin-btn">
-            Admin Login
+          <button type="submit" className="login-btn">
+            Login
           </button>
         </form>
+
+        
       </div>
     </div>
   );
 };
+
+export default LoginPage;

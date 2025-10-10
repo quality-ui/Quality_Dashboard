@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   FileCheck,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { Layout } from "../components/layout";
+
 import "./Dashboardpage.css";
 
 export const DashboardPage = () => {
@@ -33,9 +34,10 @@ export const DashboardPage = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/auth/dashboard", {
+        const res = await fetch("http://localhost:5000/api/dashboard", {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         const data = await res.json();
         if (data.success) {
           setStats((prev) => ({
@@ -246,6 +248,16 @@ export const DashboardPage = () => {
                 <div className="flex-between">
                   <div>
                     <h4>ICUDashboard QA Checklist</h4>
+                    <p> </p>
+                  </div>
+                  <Activity className="h-8 w-8 text-white" />
+                </div>
+              </Link>
+
+              <Link to="/strock-qa" className="quick-action-card bg-purple-gradient">
+                <div className="flex-between">
+                  <div>
+                    <h4>Stroke QA Checklist </h4>
                     <p> </p>
                   </div>
                   <Activity className="h-8 w-8 text-white" />

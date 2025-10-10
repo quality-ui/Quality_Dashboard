@@ -1,0 +1,85 @@
+/* Center the form in the screen */
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+  font-family: "Poppins", sans-serif;
+}
+
+/* Card styling */
+.register-card {
+  background: #fff;
+  padding: 2rem 3rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  width: 400px;
+  max-width: 90%;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.register-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Title */
+.register-card h2 {
+  color: #1e293b;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Input fields */
+.register-form input,
+.register-form select {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 15px;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.register-form input:focus,
+.register-form select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* Button */
+.register-btn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 10px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.register-btn:hover {
+  background: #dc2626;
+  transform: scale(1.02);
+}
+
+/* Message text */
+.register-message {
+  margin-top: 1rem;
+  font-size: 14px;
+  color: #16a34a;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .register-card {
+    padding: 1.5rem;
+  }
+}

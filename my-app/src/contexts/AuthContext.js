@@ -1,73 +1,44 @@
-// src/contexts/AuthContext.js
-import React, { createContext, useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+// src/context/AuthContext.js
+import React, { createContext, useState, useEffect, useContext } from "react";
+import axios from "axios";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")) || null);
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user")) || null);
+  const [token, setToken] = useState(() => localStorage.getItem("token") || null);
 
-  // 🔐 Login
-  const login = async (email, password) => {
+  const login = async (email, password, isAdmin) => {
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const endpoint = isAdmin 
+        ? "http://localhost:5000/api/auth/admin/login"
+        : "http://localhost:5000/api/auth/login";
 
-      const data = await res.json();
+      const res = await axios.post(endpoint, { email, password });
 
-      if (res.ok && data.success) {
-        const loggedUser = data.user;
-        localStorage.setItem("user", JSON.stringify(loggedUser));
-        localStorage.setItem("token", data.token);
-        setUser(loggedUser);
-
-        // 🔀 Redirect based on role
-        if (loggedUser.role === "admin") navigate("/admin");
-        else navigate("/dashboard");
-      } else {
-        return { success: false, message: data.message || "Invalid credentials" };
+      if (res.data.success) {
+        setUser(res.data.user);
+        setToken(res.data.token);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        localStorage.setItem("token", res.data.token);
+        return { success: true, role: res.data.user.role };
       }
-
-      return data;
-    } catch (error) {
-      console.error("Login error:", error);
-      return { success: false, message: "Login failed. Please try again." };
+      return { success: false, message: res.data.message };
+    } catch (err) {
+      console.error("Login error:", err);
+      return { success: false, message: "Invalid credentials" };
     }
   };
 
-  // 📝 Register
-  const register = async (name, email, password, role = "user") => {
-    try {
-      const res = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.success) navigate("/login");
-      return data;
-    } catch (error) {
-      console.error("Register error:", error);
-      return { success: false, message: "Registration failed" };
-    }
-  };
-
-  // 🚪 Logout
   const logout = () => {
+    setUser(null);
+    setToken(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
-    setUser(null);
-    navigate("/login");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
