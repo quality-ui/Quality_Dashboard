@@ -1,18 +1,27 @@
 // src/context/AuthContext.js
-import React, { createContext, useState, useEffect, useContext } from "react";
+import React, { createContext, useState, useContext } from "react";
 import axios from "axios";
 
 const AuthContext = createContext();
 
+// ✅ Automatically use correct backend URL
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user")) || null);
-  const [token, setToken] = useState(() => localStorage.getItem("token") || null);
+  const [user, setUser] = useState(
+    () => JSON.parse(localStorage.getItem("user")) || null
+  );
+  const [token, setToken] = useState(
+    () => localStorage.getItem("token") || null
+  );
 
   const login = async (email, password, isAdmin) => {
     try {
-      const endpoint = isAdmin 
-        ? "http://localhost:5000/api/auth/admin/login"
-        : "http://localhost:5000/api/auth/login";
+      // ✅ Choose correct login endpoint
+      const endpoint = isAdmin
+        ? `${API_BASE_URL}/api/auth/admin/login`
+        : `${API_BASE_URL}/api/auth/login`;
 
       const res = await axios.post(endpoint, { email, password });
 
@@ -23,6 +32,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("token", res.data.token);
         return { success: true, role: res.data.user.role };
       }
+
       return { success: false, message: res.data.message };
     } catch (err) {
       console.error("Login error:", err);

@@ -1,6 +1,6 @@
 // src/pages/AdminPage.js
 import React, { useEffect, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ FIXED IMPORT
+import { useNavigate } from "react-router-dom";
 import "./AdminPage.css";
 
 export const AdminPage = () => {
@@ -15,7 +15,7 @@ export const AdminPage = () => {
 
   const token = localStorage.getItem("token");
 
-  // ✅ Fetch all users
+  // Fetch users from backend
   const fetchUsers = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/admin/users", {
@@ -31,6 +31,7 @@ export const AdminPage = () => {
       }
     } catch (err) {
       console.error("Fetch users failed:", err);
+      setUsers([]);
     }
   };
 
@@ -38,17 +39,17 @@ export const AdminPage = () => {
     fetchUsers();
   }, []);
 
-  // 🔍 Filtered + Sorted Users
+  // Filter + sort users
   const filteredUsers = useMemo(() => {
     let filtered = users.filter(
       (u) =>
-        u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchTerm.toLowerCase())
+        (u.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (u.email || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     filtered.sort((a, b) => {
-      const valA = a[sortField]?.toString().toLowerCase() || "";
-      const valB = b[sortField]?.toString().toLowerCase() || "";
+      const valA = (a[sortField] || "").toString().toLowerCase();
+      const valB = (b[sortField] || "").toString().toLowerCase();
       if (valA < valB) return sortOrder === "asc" ? -1 : 1;
       if (valA > valB) return sortOrder === "asc" ? 1 : -1;
       return 0;
@@ -57,7 +58,7 @@ export const AdminPage = () => {
     return filtered;
   }, [users, searchTerm, sortField, sortOrder]);
 
-  // 🔢 Pagination
+  // Pagination
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * itemsPerPage,
@@ -75,11 +76,15 @@ export const AdminPage = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
-      await fetch(`http://localhost:5000/api/admin/users/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchUsers();
+      try {
+        await fetch(`http://localhost:5000/api/admin/users/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        fetchUsers();
+      } catch (err) {
+        console.error("Delete failed:", err);
+      }
     }
   };
 
@@ -89,16 +94,23 @@ export const AdminPage = () => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    await fetch(`http://localhost:5000/api/admin/users/${editingUser.id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(editingUser),
-    });
-    setEditingUser(null);
-    fetchUsers();
+    try {
+      await fetch(
+        `http://localhost:5000/api/admin/users/${editingUser._id || editingUser.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(editingUser),
+        }
+      );
+      setEditingUser(null);
+      fetchUsers();
+    } catch (err) {
+      console.error("Update failed:", err);
+    }
   };
 
   return (
@@ -106,13 +118,11 @@ export const AdminPage = () => {
       <h2>Admin Dashboard</h2>
 
       <div className="admin-actions">
-        {/* ✅ navigate() now works */}
         <button onClick={() => navigate("/register")} className="register-btn">
           ➕ Register New User
         </button>
       </div>
 
-      {/* 🔍 Search */}
       <div className="table-controls">
         <input
           type="text"
@@ -125,7 +135,6 @@ export const AdminPage = () => {
         />
       </div>
 
-      {/* 📋 Table */}
       <table className="admin-table">
         <thead>
           <tr>
@@ -145,8 +154,8 @@ export const AdminPage = () => {
         <tbody>
           {paginatedUsers.length > 0 ? (
             paginatedUsers.map((u) => (
-              <tr key={u.id}>
-                <td>{u.id}</td>
+              <tr key={u._id || u.id}>
+                <td>{u._id || u.id}</td>
                 <td>{u.name}</td>
                 <td>{u.email}</td>
                 <td>{u.role}</td>
@@ -154,7 +163,10 @@ export const AdminPage = () => {
                   <button className="edit-btn" onClick={() => handleEdit(u)}>
                     ✏️ Edit
                   </button>
-                  <button className="delete-btn" onClick={() => handleDelete(u.id)}>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDelete(u._id || u.id)}
+                  >
                     🗑️ Delete
                   </button>
                 </td>
@@ -170,7 +182,6 @@ export const AdminPage = () => {
         </tbody>
       </table>
 
-      {/* 🔢 Pagination Controls */}
       {totalPages > 1 && (
         <div className="pagination">
           <button
@@ -191,7 +202,6 @@ export const AdminPage = () => {
         </div>
       )}
 
-      {/* ✏️ Edit Modal */}
       {editingUser && (
         <div className="modal">
           <form onSubmit={handleUpdate} className="edit-form">
