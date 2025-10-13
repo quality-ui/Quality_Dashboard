@@ -13,6 +13,9 @@ const LoginPage = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState("");
 
+  const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
+
   const handleLogin = async (e) => {
     e.preventDefault();
     const res = await login(email, password, isAdmin);

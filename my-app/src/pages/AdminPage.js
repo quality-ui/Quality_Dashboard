@@ -3,6 +3,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AdminPage.css";
 
+
 export const AdminPage = () => {
   const [users, setUsers] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
@@ -15,10 +16,13 @@ export const AdminPage = () => {
 
   const token = localStorage.getItem("token");
 
+  const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
+
   // Fetch users from backend
   const fetchUsers = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/admin/users", {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -77,7 +81,7 @@ export const AdminPage = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        await fetch(`http://localhost:5000/api/admin/users/${id}`, {
+        await fetch(`${API_BASE_URL}/api/admin/users/${id}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -96,7 +100,7 @@ export const AdminPage = () => {
     e.preventDefault();
     try {
       await fetch(
-        `http://localhost:5000/api/admin/users/${editingUser._id || editingUser.id}`,
+        `${API_BASE_URL}/api/admin/users/${editingUser._id || editingUser.id}`,
         {
           method: "PUT",
           headers: {

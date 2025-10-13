@@ -5,6 +5,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import "./ReportPages.css";
 
+
 export const ReportsPage = () => {
   const [checklistReports, setChecklistReports] = useState([]);
   const [kpiReports, setKpiReports] = useState([]);
@@ -13,6 +14,9 @@ export const ReportsPage = () => {
   const [bloodStorageReports, setBloodStorageReports] = useState([]);
   const [icuReports, setIcuReports] = useState([]);
   const [strokeReports, setStrokeReports] = useState([]);
+
+  const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 
   // ✅ Load all reports from localStorage
   useEffect(() => {

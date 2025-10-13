@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import axios from "axios";
 import "./RegisterPage.css";
 
+
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -19,7 +23,7 @@ const RegisterPage = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post("http://localhost:5000/api/auth/register", formData, {
+      const res = await axios.post(`${API_BASE_URL}/api/auth/register`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMessage(res.data.message || "User created successfully");

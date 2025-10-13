@@ -14,6 +14,9 @@ import { Layout } from "../components/layout";
 
 import "./Dashboardpage.css";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
+
 export const DashboardPage = () => {
   const { user, logout, token } = useAuth();
   const navigate = useNavigate();
@@ -34,7 +37,7 @@ export const DashboardPage = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/dashboard", {
+        const res = await fetch(`${API_BASE_URL}:5000/api/dashboard`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -140,7 +143,7 @@ export const DashboardPage = () => {
     };
 
     try {
-      await fetch("http://localhost:5000/api/surgeryqa", {
+      await fetch(`${API_BASE_URL}/api/surgeryqa`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
