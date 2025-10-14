@@ -1,12 +1,11 @@
-// src/context/AuthContext.js
 import React, { createContext, useState, useContext } from "react";
 import axios from "axios";
 
 const AuthContext = createContext();
 
-// ✅ Automatically use correct backend URL
+// ✅ Use relative URL in production (works automatically with Vercel routing)
 const API_BASE_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:5000";
+  process.env.REACT_APP_API_URL || "/api";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(
@@ -20,8 +19,8 @@ export const AuthProvider = ({ children }) => {
     try {
       // ✅ Choose correct login endpoint
       const endpoint = isAdmin
-        ? `${API_BASE_URL}/api/auth/admin/login`
-        : `${API_BASE_URL}/api/auth/login`;
+        ? `${API_BASE_URL}/auth/admin/login`
+        : `${API_BASE_URL}/auth/login`;
 
       const res = await axios.post(endpoint, { email, password });
 

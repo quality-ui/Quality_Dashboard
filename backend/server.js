@@ -1,4 +1,3 @@
-// backend/server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -16,27 +15,21 @@ dotenv.config();
 const app = express();
 
 // -------------------- ✅ CORS --------------------
+// Add your deployed frontend URL here
 const allowedOrigins = [
-  "http://localhost:5000", // local frontend
-  "https://your-frontend.vercel.app", // replace with deployed frontend URL
+  "http://localhost:3000", // local frontend (React default port)
+  "https://dashboard-checklist-l1wn9khzf-quality-uis-projects.vercel.app" // deployed frontend
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (Postman, mobile apps)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.indexOf(origin) === -1) {
-        const msg =
-          "The CORS policy for this site does not allow access from the specified Origin.";
-        return callback(new Error(msg), false);
-      }
-
-      return callback(null, true);
+      if (!origin) return callback(null, true); // allow Postman / server requests
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("CORS policy: origin not allowed"), false);
     },
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true, // only if you use cookies/sessions
+    credentials: true,
   })
 );
 
@@ -51,39 +44,25 @@ app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api", icuRoutes);
 
-// ------------------------- 🔐 LOGIN -------------------------
+// -------------------- 🔐 LOGIN --------------------
 app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
+    if (!email || !password)
+      return res.status(400).json({ success: false, message: "Email and password required" });
 
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Email and password are required" });
-    }
-
-    const [rows] = await db.execute("SELECT * FROM users WHERE email = ?", [
-      email,
-    ]);
-    if (rows.length === 0) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Invalid email or password" });
-    }
+    const [rows] = await db.execute("SELECT * FROM users WHERE email = ?", [email]);
+    if (!rows.length)
+      return res.status(401).json({ success: false, message: "Invalid email or password" });
 
     const user = rows[0];
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Invalid email or password" });
-    }
+    if (!isMatch)
+      return res.status(401).json({ success: false, message: "Invalid email or password" });
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
     res.json({
       success: true,
@@ -96,39 +75,37 @@ app.post("/api/auth/login", async (req, res) => {
       },
       token,
     });
-  } catch (error) {
-    console.error("Login error:", error);
+  } catch (err) {
+    console.error("Login error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
 // -------------------- ✅ Registration disabled --------------------
 app.post("/api/auth/register", (req, res) => {
-  return res.status(403).json({
+  res.status(403).json({
     success: false,
-    message:
-      "Registration is disabled. Only admin can add users directly in database.",
+    message: "Registration disabled. Only admin can add users directly.",
   });
 });
 
 // -------------------- ✅ Verify token --------------------
 app.get("/api/auth/verify", async (req, res) => {
   const token = req.headers.authorization?.split(" ")[1];
-  if (!token)
-    return res.status(401).json({ success: false, message: "No token provided" });
+  if (!token) return res.status(401).json({ success: false, message: "No token provided" });
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     res.json({ success: true, user: decoded });
-  } catch (err) {
+  } catch {
     res.status(401).json({ success: false, message: "Invalid or expired token" });
   }
 });
 
-// -------------------- ✅ Root test route --------------------
+// -------------------- ✅ Root test --------------------
 app.get("/", (req, res) => {
   res.send("🚀 Backend running successfully on Vercel!");
 });
 
-// -------------------- ✅ Export for Vercel --------------------
+// -------------------- ✅ Export app for Vercel --------------------
 export default app;
