@@ -465,3 +465,30 @@ button:hover {
 .action-card.anaesthesia {
   background: linear-gradient(135deg, #14b8a6, #0d9488); /* Teal */
 }
+
+
+.dashboard-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); padding: 12px; }
+.card-top { display:flex; justify-content:space-between; align-items:center; }
+.card-title { font-size: 1.05rem; font-weight:600; }
+.card-sub { color:#666; font-size:0.85rem; }
+.priority-badge.medium { background:#fef3c7; color:#92400e; padding:6px 8px; border-radius:999px; font-size:0.75rem;}
+.priority-badge.high { background:#fee2e2; color:#991b1b; padding:6px 8px; border-radius:999px; font-size:0.75rem;}
+.card-main { margin-top:12px; }
+.big { font-size:1.6rem; font-weight:700; margin-right:8px; }
+.progress-bar { background:#eef2ff; height:8px; border-radius:999px; margin:10px 0; }
+.progress { height:100%; background:#3b82f6; border-radius:999px; }
+.card-actions { display:flex; gap:8px; margin-top:8px; }
+.btn { padding:6px 10px; border-radius:6px; cursor:pointer; background:#f3f4f6; border:none; }
+.btn.sm { padding:4px 8px; }
+.btn.outline { background:transparent; border:1px solid #e5e7eb; }
+.freq { font-size:0.8rem; color:#6b7280; margin-top:6px; }
+
+
+.quality-dashboard { padding: 20px; }
+.dashboard-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+.header-actions .btn { margin-left:10px; }
+.cards-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:16px; }
+
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:50; }
+.modal { background:#fff; width:90%; max-width:900px; border-radius:8px; padding:18px; }
+.modal-header { display:flex; justify-content:space-between; align-items:center; }

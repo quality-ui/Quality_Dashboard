@@ -1,4 +1,4 @@
-import React, { useEffect, useState,useContext } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   FileCheck,
@@ -11,11 +11,14 @@ import {
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { Layout } from "../components/layout";
-
 import "./Dashboardpage.css";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-
+// ✅ Automatically switches between local & deployed
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL ||
+  (window.location.hostname === "localhost"
+    ? "http://localhost:5000/api"
+    : "/api");
 
 export const DashboardPage = () => {
   const { user, logout, token } = useAuth();
@@ -37,10 +40,9 @@ export const DashboardPage = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}:5000/api/dashboard`, {
+        const res = await fetch(`${API_BASE_URL}/dashboard`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         const data = await res.json();
         if (data.success) {
           setStats((prev) => ({
@@ -48,6 +50,10 @@ export const DashboardPage = () => {
             totalUsers: data.stats.totalUsers,
             totalAdmins: data.stats.totalAdmins,
             recentSignups: data.stats.recentSignups,
+            totalChecklists: data.stats.totalChecklists,
+            completedItems: data.stats.completedItems,
+            pendingReviews: data.stats.pendingReviews,
+            activeUsers: data.stats.activeUsers,
           }));
         } else {
           setError(data.message || "Failed to load stats");
@@ -72,30 +78,12 @@ export const DashboardPage = () => {
     { name: "Total Checklists", value: stats.totalChecklists ?? 0, icon: FileCheck, color: "stat-icon blue" },
     { name: "Completed Items", value: stats.completedItems ?? 0, icon: TrendingUp, color: "stat-icon green" },
     { name: "Pending Reviews", value: stats.pendingReviews ?? 0, icon: Clock, color: "stat-icon amber" },
-    { name: "Active Users", value: stats.totalUsers ?? 0, icon: Users, color: "stat-icon purple" },
+    { name: "Active Users", value: stats.activeUsers ?? 0, icon: Users, color: "stat-icon purple" },
     { name: "Admins", value: stats.totalAdmins ?? 0, icon: Users, color: "stat-icon pink" },
     { name: "New Signups (7d)", value: stats.recentSignups ?? 0, icon: TrendingUp, color: "stat-icon orange" },
   ];
 
-  // 🩺 ICU QA Parameters
-  const qaData = [
-    { parameter: "GCS Documentation Compliance", unit: "% of ICU patients with GCS documented every 8h", target: "≥95", freq: "Daily / Weekly", staff: "ICU Nurse" },
-    { parameter: "Unplanned Extubation", unit: "Number per 100 ventilator days", target: "0", freq: "Monthly", staff: "Respiratory Therapist / ICU Team" },
-    { parameter: "Central Line Removal due to Infection", unit: "Number per 100 central line days", target: "<2", freq: "Monthly", staff: "ICU Nurse / Infection Control" },
-    { parameter: "Daily Fluid Balance Documentation", unit: "% compliance", target: "≥95", freq: "Daily", staff: "ICU Nurse" },
-    { parameter: "ET Tube Cuff Pressure Monitoring", unit: "% of patients with cuff pressure checked every 8h", target: "≥95", freq: "Daily", staff: "ICU Nurse / RT" },
-    { parameter: "Time to Correct Hypotension After Onset", unit: "Average minutes to achieve MAP >65 mmHg", target: "<30", freq: "Daily", staff: "ICU Resident / Nurse" },
-    { parameter: "Hypoglycemic Events", unit: "Number per 30 ICU days", target: "0", freq: "Monthly", staff: "ICU Nurse / Resident" },
-  ];
-
-  const [qaValues, setQaValues] = useState(Array(qaData.length).fill(""));
-  const handleValueChange = (index, value) => {
-    const newValues = [...qaValues];
-    newValues[index] = value;
-    setQaValues(newValues);
-  };
-
-  // ✅ Surgery QA Checklist States
+  // 🩺 Surgery QA Checklist
   const [surgeryDate, setSurgeryDate] = useState("");
   const [auditor, setAuditor] = useState("");
   const [surgeryChecklist, setSurgeryChecklist] = useState([
@@ -143,7 +131,7 @@ export const DashboardPage = () => {
     };
 
     try {
-      await fetch(`${API_BASE_URL}/api/surgeryqa`, {
+      await fetch(`${API_BASE_URL}/surgeryqa`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -174,7 +162,9 @@ export const DashboardPage = () => {
         {loading ? (
           <div className="loading">Loading dashboard...</div>
         ) : error ? (
-          <div className="error-message"><AlertCircle className="h-5 w-5 text-red-500" />{error}</div>
+          <div className="error-message">
+            <AlertCircle className="h-5 w-5 text-red-500" /> {error}
+          </div>
         ) : (
           <>
             {/* ✅ Stats Grid */}
@@ -217,56 +207,56 @@ export const DashboardPage = () => {
                     <TrendingUp className="h-8 w-8 text-white" />
                   </div>
                 </Link>
+
                 <Link to="/surgery" className="quick-action-card bg-red-gradient">
-                <div className="flex-between">
-                  <div>
-                    <h4>Surgery QA Checklist</h4>
-                    <p>Audit surgical processes and compliance</p>
+                  <div className="flex-between">
+                    <div>
+                      <h4>Surgery QA Checklist</h4>
+                      <p>Audit surgical processes and compliance</p>
+                    </div>
+                    <Activity className="h-8 w-8 text-white" />
                   </div>
-                  <Activity className="h-8 w-8 text-white" />
-                </div>
-              </Link>
+                </Link>
 
-              <Link to="/anaethesia" className="quick-action-card bg-gray-gradient">
-              <div className="flex-between">
-                <div>
-                  <h4>Anaesthesia QA Checklist</h4>
-                   <p>Evaluate anaesthesia quality and safety</p>
-                </div>
-               <Activity className="h-8 w-8 text-white" />
-              </div>
-              </Link>
+                <Link to="/anaethesia" className="quick-action-card bg-gray-gradient">
+                  <div className="flex-between">
+                    <div>
+                      <h4>Anaesthesia QA Checklist</h4>
+                      <p>Evaluate anaesthesia quality and safety</p>
+                    </div>
+                    <Activity className="h-8 w-8 text-white" />
+                  </div>
+                </Link>
+
                 <Link to="/bloodstorage-qa" className="quick-action-card bg-brown-gradient">
-                <div className="flex-between">
-                  <div>
-                    <h4>Blood Storage Unit QA Checklist</h4>
-                    <p>Manage and audit blood storage safety & compliance </p>
+                  <div className="flex-between">
+                    <div>
+                      <h4>Blood Storage Unit QA Checklist</h4>
+                      <p>Manage and audit blood storage safety & compliance</p>
+                    </div>
+                    <Activity className="h-8 w-8 text-white" />
                   </div>
-                  <Activity className="h-8 w-8 text-white" />
-                </div>
-              </Link>
+                </Link>
 
-
-              <Link to="/icudashboard" className="quick-action-card bg-brown-gradient">
-                <div className="flex-between">
-                  <div>
-                    <h4>ICUDashboard QA Checklist</h4>
-                    <p> </p>
+                <Link to="/icudashboard" className="quick-action-card bg-brown-gradient">
+                  <div className="flex-between">
+                    <div>
+                      <h4>ICU Dashboard QA Checklist</h4>
+                      <p>Monitor ICU performance indicators</p>
+                    </div>
+                    <Activity className="h-8 w-8 text-white" />
                   </div>
-                  <Activity className="h-8 w-8 text-white" />
-                </div>
-              </Link>
+                </Link>
 
-              <Link to="/strock-qa" className="quick-action-card bg-purple-gradient">
-                <div className="flex-between">
-                  <div>
-                    <h4>Stroke QA Checklist </h4>
-                    <p> </p>
+                <Link to="/strock-qa" className="quick-action-card bg-purple-gradient">
+                  <div className="flex-between">
+                    <div>
+                      <h4>Stroke QA Checklist</h4>
+                      <p>Evaluate stroke management quality</p>
+                    </div>
+                    <Activity className="h-8 w-8 text-white" />
                   </div>
-                  <Activity className="h-8 w-8 text-white" />
-                </div>
-              </Link>
-
+                </Link>
 
                 <Link to="/reports" className="quick-action-card bg-green-gradient">
                   <div className="flex-between">
@@ -277,14 +267,18 @@ export const DashboardPage = () => {
                     <BarChart3 className="h-8 w-8 text-white" />
                   </div>
                 </Link>
+
+                 <Link to="/qualitydashboard" className="quick-action-card bg-green-gradient">
+                  <div className="flex-between">
+                    <div>
+                      <h4>Quality - Dashboard</h4>
+                      <p>View and analyse charts.</p>
+                    </div>
+                    <BarChart3 className="h-8 w-8 text-white" />
+                  </div>
+                </Link>
               </div>
             </div>
-
-          
-              
-                
-
-            
 
             {/* ✅ Recent Activity */}
             <div className="recent-activity">
@@ -296,29 +290,21 @@ export const DashboardPage = () => {
                 <div className="activity-item">
                   <div className="activity-dot dot-green"></div>
                   <div className="activity-text">
-                    <p className="activity-title">
-                      New checklist item created: "Equipment Safety Check"
-                    </p>
+                    <p className="activity-title">New checklist item created: "Equipment Safety Check"</p>
                     <p className="activity-time">2 minutes ago</p>
                   </div>
                 </div>
-
                 <div className="activity-item">
                   <div className="activity-dot dot-blue"></div>
                   <div className="activity-text">
-                    <p className="activity-title">
-                      File uploaded for "Quality Control Verification"
-                    </p>
+                    <p className="activity-title">File uploaded for "Quality Control Verification"</p>
                     <p className="activity-time">15 minutes ago</p>
                   </div>
                 </div>
-
                 <div className="activity-item">
                   <div className="activity-dot dot-amber"></div>
                   <div className="activity-text">
-                    <p className="activity-title">
-                      Checklist item updated: "Process Documentation"
-                    </p>
+                    <p className="activity-title">Checklist item updated: "Process Documentation"</p>
                     <p className="activity-time">1 hour ago</p>
                   </div>
                 </div>
@@ -330,3 +316,4 @@ export const DashboardPage = () => {
     </Layout>
   );
 };
+ 

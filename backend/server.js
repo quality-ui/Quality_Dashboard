@@ -9,22 +9,22 @@ import adminRoutes from "./routes/admin.js";
 import authRoutes from "./routes/auth.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import icuRoutes from "./routes/icuRoutes.js";
+import dashboardQuality from "./routes/dashboardQuality.js";
 
 dotenv.config();
 
 const app = express();
 
 // -------------------- ✅ CORS --------------------
-// Add your deployed frontend URL here
 const allowedOrigins = [
-  "http://localhost:3000", // local frontend (React default port)
+  "http://localhost:3000", // local frontend
   "https://dashboard-checklist-l1wn9khzf-quality-uis-projects.vercel.app" // deployed frontend
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // allow Postman / server requests
+      if (!origin) return callback(null, true); // Postman or server requests
       if (allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error("CORS policy: origin not allowed"), false);
     },
@@ -43,6 +43,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api", icuRoutes);
+app.use("/api/dashboard", dashboardQuality);
 
 // -------------------- 🔐 LOGIN --------------------
 app.post("/api/auth/login", async (req, res) => {
@@ -67,12 +68,7 @@ app.post("/api/auth/login", async (req, res) => {
     res.json({
       success: true,
       message: "Login successful",
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
       token,
     });
   } catch (err) {
@@ -104,8 +100,16 @@ app.get("/api/auth/verify", async (req, res) => {
 
 // -------------------- ✅ Root test --------------------
 app.get("/", (req, res) => {
-  res.send("🚀 Backend running successfully on Vercel!");
+  res.send("🚀 Backend running successfully!");
 });
+
+// -------------------- ✅ Local server listener --------------------
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Backend running locally on http://localhost:${PORT}`);
+  });
+}
 
 // -------------------- ✅ Export app for Vercel --------------------
 export default app;

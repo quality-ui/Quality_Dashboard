@@ -1,4 +1,3 @@
-// src/pages/LoginPage.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -12,9 +11,6 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState("");
-
-  const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -76,8 +72,6 @@ const LoginPage = () => {
             Login
           </button>
         </form>
-
-        
       </div>
     </div>
   );

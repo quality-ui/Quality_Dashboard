@@ -1,8 +1,7 @@
-// src/pages/AdminPage.js
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import "./AdminPage.css";
-
 
 export const AdminPage = () => {
   const [users, setUsers] = useState([]);
@@ -14,22 +13,15 @@ export const AdminPage = () => {
   const itemsPerPage = 5;
   const navigate = useNavigate();
 
-  const token = localStorage.getItem("token");
+  const { api } = useAuth(); // Axios instance with token
 
-  const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-
-
-  // Fetch users from backend
   const fetchUsers = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/users`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setUsers(data);
-      } else if (data.success && Array.isArray(data.users)) {
-        setUsers(data.users);
+      const res = await api.get("/admin/users"); // relative path
+      if (Array.isArray(res.data)) {
+        setUsers(res.data);
+      } else if (res.data.success && Array.isArray(res.data.users)) {
+        setUsers(res.data.users);
       } else {
         setUsers([]);
       }
@@ -43,7 +35,7 @@ export const AdminPage = () => {
     fetchUsers();
   }, []);
 
-  // Filter + sort users
+  // Filter + sort
   const filteredUsers = useMemo(() => {
     let filtered = users.filter(
       (u) =>
@@ -81,10 +73,7 @@ export const AdminPage = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        await fetch(`${API_BASE_URL}/api/admin/users/${id}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await api.delete(`/admin/users/${id}`);
         fetchUsers();
       } catch (err) {
         console.error("Delete failed:", err);
@@ -99,17 +88,7 @@ export const AdminPage = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await fetch(
-        `${API_BASE_URL}/api/admin/users/${editingUser._id || editingUser.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(editingUser),
-        }
-      );
+      await api.put(`/admin/users/${editingUser._id || editingUser.id}`, editingUser);
       setEditingUser(null);
       fetchUsers();
     } catch (err) {
@@ -164,15 +143,8 @@ export const AdminPage = () => {
                 <td>{u.email}</td>
                 <td>{u.role}</td>
                 <td>
-                  <button className="edit-btn" onClick={() => handleEdit(u)}>
-                    ✏️ Edit
-                  </button>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDelete(u._id || u.id)}
-                  >
-                    🗑️ Delete
-                  </button>
+                  <button className="edit-btn" onClick={() => handleEdit(u)}>✏️ Edit</button>
+                  <button className="delete-btn" onClick={() => handleDelete(u._id || u.id)}>🗑️ Delete</button>
                 </td>
               </tr>
             ))
@@ -188,21 +160,9 @@ export const AdminPage = () => {
 
       {totalPages > 1 && (
         <div className="pagination">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            ⬅ Prev
-          </button>
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-          >
-            Next ➡
-          </button>
+          <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1}>⬅ Prev</button>
+          <span>Page {currentPage} of {totalPages}</span>
+          <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>Next ➡</button>
         </div>
       )}
 
@@ -211,41 +171,19 @@ export const AdminPage = () => {
           <form onSubmit={handleUpdate} className="edit-form">
             <h3>Edit User</h3>
             <label>Name</label>
-            <input
-              value={editingUser.name}
-              onChange={(e) =>
-                setEditingUser({ ...editingUser, name: e.target.value })
-              }
-            />
+            <input value={editingUser.name} onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })} />
             <label>Email</label>
-            <input
-              value={editingUser.email}
-              onChange={(e) =>
-                setEditingUser({ ...editingUser, email: e.target.value })
-              }
-            />
+            <input value={editingUser.email} onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })} />
             <label>Password (optional)</label>
-            <input
-              type="password"
-              onChange={(e) =>
-                setEditingUser({ ...editingUser, password: e.target.value })
-              }
-            />
+            <input type="password" onChange={(e) => setEditingUser({ ...editingUser, password: e.target.value })} />
             <label>Role</label>
-            <select
-              value={editingUser.role}
-              onChange={(e) =>
-                setEditingUser({ ...editingUser, role: e.target.value })
-              }
-            >
+            <select value={editingUser.role} onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}>
               <option value="admin">Admin</option>
               <option value="user">User</option>
             </select>
             <div className="edit-actions">
               <button type="submit">Save</button>
-              <button type="button" onClick={() => setEditingUser(null)}>
-                Cancel
-              </button>
+              <button type="button" onClick={() => setEditingUser(null)}>Cancel</button>
             </div>
           </form>
         </div>

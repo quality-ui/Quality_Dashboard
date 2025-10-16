@@ -8,6 +8,7 @@ import { DashboardProvider } from "./contexts/DashboardContext";
 import  ProtectedRoute  from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 
+
 // ✅ Pages
 import { ChecklistPage } from "./pages/ChecklistPage";
 import { KPIPage } from "./pages/KPIPage";
@@ -21,6 +22,7 @@ import { SurgeryQAForm } from "./pages/SurgeryQAForm";
 import { BloodStorageQAPage } from "./pages/BloodStorageQAPage";
 import  ICUDashboard  from "./pages/ICUDashboard";
 import     StrokeQADashboard  from "./pages/StrokeQADashboard";
+import     QualityDashboard  from "./pages/QualityDashboard";
 
 function App() {
   return (
@@ -122,6 +124,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <StrokeQADashboard   />
+                </ProtectedRoute>
+              }
+            />
+             <Route
+              path="/qualitydashboard"
+              element={
+                <ProtectedRoute>
+                  <QualityDashboard   />
                 </ProtectedRoute>
               }
             />

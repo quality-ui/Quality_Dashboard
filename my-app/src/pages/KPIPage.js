@@ -41,11 +41,36 @@ export const KPIPage = () => {
         />
 
         <label>Department</label>
-        <input
-          type="text"
-          value={department}
-          onChange={(e) => setDepartment(e.target.value)}
-        />
+        <select value={department} onChange={(e) => setDepartment(e.target.value)}>
+          <option>Account</option>
+          <option>Internal Audit dept</option>
+          <option>LAB</option>
+          <option>MRD</option>
+          <option>Clinical Pharmacist</option>
+          <option>IT</option>
+          <option>OM</option>
+          <option>HR</option>
+          <option>Pharmacy</option>
+          <option>Dietician</option>
+          <option>Pharmacy_</option>
+          <option>HIC</option>
+          <option>Radiology</option>
+          <option>Physiotherapy</option>
+          <option>Casualty</option>
+          <option>Public Relations</option>
+          <option>OT</option>
+          <option>Video Editor</option>
+          <option>Housekeeping</option>
+          <option>Facility</option>
+          <option>Biomedical</option>
+          <option>Floor manager</option>
+          <option>Front office</option>
+          <option>Inpatient coordinator</option>
+          <option>IP Billing</option>
+          <option>Insurance</option>
+          <option>NS (OVER ALL DATA SHEET)</option>
+          <option>ICU</option>
+        </select>
 
         <label>KPI Sheet</label>
         <select value={kpiStatus} onChange={(e) => setKpiStatus(e.target.value)}>
@@ -61,9 +86,11 @@ export const KPIPage = () => {
           <option>Received</option>
           <option>Not Received</option>
           <option>Not Applicable</option>
-          <option>Received (Pending Last KPI)</option>
+          <option>Received (pending last kpi raw data )</option>
           <option>Received (Need to Discuss)</option>
           <option>Data Having Software</option>
+          <option>Have System</option>
+          <option>MIS Software</option>
         </select>
         <br /><br />
 
