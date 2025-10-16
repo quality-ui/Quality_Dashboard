@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import db from "./db.js";
 
+// Routes
 import adminRoutes from "./routes/admin.js";
 import authRoutes from "./routes/auth.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
@@ -17,14 +18,14 @@ const app = express();
 
 // -------------------- ✅ CORS --------------------
 const allowedOrigins = [
-  "http://localhost:3000", // local frontend
-  "https://dashboard-checklist-l1wn9khzf-quality-uis-projects.vercel.app" // deployed frontend
+  "http://localhost:3000", // Local frontend
+  "https://dashboard-checklist-l1wn9khzf-quality-uis-projects.vercel.app", // Deployed frontend
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // Postman or server requests
+      if (!origin) return callback(null, true); // Allow requests like Postman
       if (allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error("CORS policy: origin not allowed"), false);
     },
@@ -35,7 +36,7 @@ app.use(
 
 app.use(express.json());
 
-// -------------------- ✅ JWT --------------------
+// -------------------- ✅ JWT Secret --------------------
 const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key";
 
 // -------------------- ✅ Routes --------------------
@@ -61,9 +62,11 @@ app.post("/api/auth/login", async (req, res) => {
     if (!isMatch)
       return res.status(401).json({ success: false, message: "Invalid email or password" });
 
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
     res.json({
       success: true,
@@ -77,7 +80,7 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-// -------------------- ✅ Registration disabled --------------------
+// -------------------- ✅ Registration Disabled --------------------
 app.post("/api/auth/register", (req, res) => {
   res.status(403).json({
     success: false,
@@ -85,7 +88,7 @@ app.post("/api/auth/register", (req, res) => {
   });
 });
 
-// -------------------- ✅ Verify token --------------------
+// -------------------- ✅ Verify Token --------------------
 app.get("/api/auth/verify", async (req, res) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ success: false, message: "No token provided" });
@@ -98,12 +101,12 @@ app.get("/api/auth/verify", async (req, res) => {
   }
 });
 
-// -------------------- ✅ Root test --------------------
+// -------------------- ✅ Root Test --------------------
 app.get("/", (req, res) => {
-  res.send("🚀 Backend running successfully!");
+  res.send("🚀 Backend running successfully on Vercel or Local!");
 });
 
-// -------------------- ✅ Local server listener --------------------
+// -------------------- ✅ Local Only Server Listener --------------------
 if (process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
@@ -111,5 +114,5 @@ if (process.env.NODE_ENV !== "production") {
   });
 }
 
-// -------------------- ✅ Export app for Vercel --------------------
+// -------------------- ✅ Export App (for Vercel) --------------------
 export default app;
