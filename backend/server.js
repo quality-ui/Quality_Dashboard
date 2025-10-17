@@ -1,3 +1,4 @@
+// backend/server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -18,14 +19,14 @@ const app = express();
 
 // -------------------- ✅ CORS --------------------
 const allowedOrigins = [
-  "http://localhost:3000", // Local frontend
-  "https://dashboard-checklist-l1wn9khzf-quality-uis-projects.vercel.app", // Deployed frontend
+  "http://localhost:3000",
+  "https://dashboard-checklist-l1wn9khzf-quality-uis-projects.vercel.app",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // Allow requests like Postman
+      if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error("CORS policy: origin not allowed"), false);
     },
@@ -80,13 +81,8 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-// -------------------- ✅ Registration Disabled --------------------
-app.post("/api/auth/register", (req, res) => {
-  res.status(403).json({
-    success: false,
-    message: "Registration disabled. Only admin can add users directly.",
-  });
-});
+// ✅ REMOVED “Registration disabled” override —
+// now /api/auth/register works properly via routes/auth.js
 
 // -------------------- ✅ Verify Token --------------------
 app.get("/api/auth/verify", async (req, res) => {

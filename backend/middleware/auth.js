@@ -1,4 +1,3 @@
-// ✅ server/middleware/auth.js
 import jwt from "jsonwebtoken";
 
 export const verifyToken = (req, res, next) => {
@@ -10,9 +9,7 @@ export const verifyToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // ✅ No role restriction — both admin and user can pass
-    req.user = decoded;
+    req.user = decoded; // id, email, role
     next();
   } catch (err) {
     console.error("verifyToken error:", err);

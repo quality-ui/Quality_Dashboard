@@ -14,7 +14,7 @@ import { ChecklistPage } from "./pages/ChecklistPage";
 import { KPIPage } from "./pages/KPIPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import  LoginPage  from "./pages/LoginPage";
-import  RegisterPage  from "./pages/RegisterPage";
+import  { RegisterPage } from "./pages/RegisterPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { AdminPage } from "./pages/AdminPage";
 import { AnaesthesiaQAForm } from "./pages/AnaesthesiaQAForm";

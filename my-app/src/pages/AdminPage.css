@@ -1,117 +1,188 @@
 .admin-container {
-  width: 90%;
   max-width: 900px;
-  margin: 2rem auto;
-  background: #f8fafc;
-  padding: 2rem;
+  margin: 40px auto;
+  padding: 30px;
+  background: #ffffff;
   border-radius: 16px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  font-family: "Segoe UI", sans-serif;
 }
 
-.admin-container h2 {
+h2 {
   text-align: center;
+  margin-bottom: 25px;
   color: #333;
-  margin-bottom: 1rem;
 }
 
-.table-controls {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
+.message {
+  text-align: center;
+  color: #007bff;
+  margin-bottom: 15px;
+  font-weight: 500;
 }
 
-.table-controls input {
-  padding: 8px 12px;
-  border-radius: 8px;
+/* ---------- Register Form ---------- */
+.user-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.user-form input,
+.user-form select {
+  padding: 10px;
   border: 1px solid #ccc;
-  width: 250px;
+  border-radius: 8px;
+  font-size: 14px;
 }
 
-.admin-table {
+.user-form button {
+  grid-column: 1 / -1;
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: background 0.3s;
+}
+
+.user-form button:hover {
+  background: #0056b3;
+}
+
+/* ---------- User Table ---------- */
+.user-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.admin-table th, .admin-table td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: left;
+.user-table th,
+.user-table td {
+  border: 1px solid #e0e0e0;
+  padding: 10px 12px;
+  text-align: center;
+  font-size: 14px;
 }
 
-.admin-table th {
-  background: #4CAF50;
-  color: white;
-  cursor: pointer;
+.user-table th {
+  background-color: #f5f7fa;
+  color: #333;
 }
 
-.admin-table th:hover {
-  background: #45a049;
+.user-table tr:nth-child(even) {
+  background: #fafafa;
 }
 
-.edit-btn, .delete-btn {
-  padding: 6px 10px;
+.user-table button {
+  margin: 0 4px;
+  padding: 6px 12px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  margin-right: 5px;
+  font-size: 13px;
+  transition: all 0.2s;
 }
 
-.edit-btn {
-  background: #007bff;
-  color: white;
+.user-table button:first-child {
+  background: #ffc107;
+  color: #000;
 }
 
-.delete-btn {
+.user-table button:first-child:hover {
+  background: #e0a800;
+}
+
+.user-table button:last-child {
   background: #dc3545;
   color: white;
 }
 
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 1rem;
-  gap: 10px;
+.user-table button:last-child:hover {
+  background: #b02a37;
 }
 
-.pagination button {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  background: #007bff;
-  color: white;
-  cursor: pointer;
-}
-
-.pagination button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-/* Modal */
+/* ---------- Modal ---------- */
 .modal {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.4);
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 10;
 }
 
-.edit-form {
+.modal-content {
   background: white;
-  padding: 1.5rem;
-  border-radius: 10px;
-  width: 320px;
+  padding: 25px;
+  border-radius: 12px;
+  width: 360px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-content h3 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.modal-content input,
+.modal-content select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.modal-buttons {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   gap: 10px;
 }
 
-.edit-actions {
-  display: flex;
-  justify-content: space-between;
+.modal-buttons button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.modal-buttons button:first-child {
+  background: #28a745;
+  color: white;
+}
+
+.modal-buttons button:first-child:hover {
+  background: #218838;
+}
+
+.modal-buttons button:last-child {
+  background: #6c757d;
+  color: white;
+}
+
+.modal-buttons button:last-child:hover {
+  background: #5a6268;
 }

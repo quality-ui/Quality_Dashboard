@@ -1,29 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  FileCheck,
-  BarChart3,
-  Users,
-  Clock,
-  TrendingUp,
-  Activity,
-  AlertCircle,
-} from "lucide-react";
+import { FileCheck, BarChart3, Users, Clock, TrendingUp, Activity, AlertCircle } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { Layout } from "../components/layout";
+import API from "../api/axiosInstance"; // ✅ Use centralized API
 import "./Dashboardpage.css";
 
-// ✅ Automatically switches between local & deployed
-const API_BASE_URL =
-  process.env.REACT_APP_API_URL ||
-  (window.location.hostname === "localhost"
-    ? "http://localhost:5000/api"
-    : "/api");
-
 export const DashboardPage = () => {
-  const { user, logout, token } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // -------------------- Dashboard Stats --------------------
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalAdmins: 0,
@@ -36,54 +23,7 @@ export const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // 🧠 Fetch dashboard stats
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/dashboard`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (data.success) {
-          setStats((prev) => ({
-            ...prev,
-            totalUsers: data.stats.totalUsers,
-            totalAdmins: data.stats.totalAdmins,
-            recentSignups: data.stats.recentSignups,
-            totalChecklists: data.stats.totalChecklists,
-            completedItems: data.stats.completedItems,
-            pendingReviews: data.stats.pendingReviews,
-            activeUsers: data.stats.activeUsers,
-          }));
-        } else {
-          setError(data.message || "Failed to load stats");
-        }
-      } catch (err) {
-        console.error(err);
-        setError("Server error");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, [token]);
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-  // 📊 Dashboard cards
-  const cards = [
-    { name: "Total Checklists", value: stats.totalChecklists ?? 0, icon: FileCheck, color: "stat-icon blue" },
-    { name: "Completed Items", value: stats.completedItems ?? 0, icon: TrendingUp, color: "stat-icon green" },
-    { name: "Pending Reviews", value: stats.pendingReviews ?? 0, icon: Clock, color: "stat-icon amber" },
-    { name: "Active Users", value: stats.activeUsers ?? 0, icon: Users, color: "stat-icon purple" },
-    { name: "Admins", value: stats.totalAdmins ?? 0, icon: Users, color: "stat-icon pink" },
-    { name: "New Signups (7d)", value: stats.recentSignups ?? 0, icon: TrendingUp, color: "stat-icon orange" },
-  ];
-
-  // 🩺 Surgery QA Checklist
+  // -------------------- Surgery QA Checklist --------------------
   const [surgeryDate, setSurgeryDate] = useState("");
   const [auditor, setAuditor] = useState("");
   const [surgeryChecklist, setSurgeryChecklist] = useState([
@@ -100,6 +40,33 @@ export const DashboardPage = () => {
     { parameter: "Post-op pain assessment documented", checked: false, compliant: "", remarks: "" },
   ]);
 
+  // -------------------- Fetch Dashboard Stats --------------------
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await API.get("/api/dashboard"); // ✅ include /api
+        if (res.data.success) {
+          setStats(res.data.stats);
+        } else {
+          setError(res.data.message || "Failed to load stats");
+        }
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+        setError("Server error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  // -------------------- Logout --------------------
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  // -------------------- Surgery QA Handlers --------------------
   const handleCheck = (idx, checked) => {
     const updated = [...surgeryChecklist];
     updated[idx].checked = checked;
@@ -118,11 +85,11 @@ export const DashboardPage = () => {
     setSurgeryChecklist(updated);
   };
 
-  const totalItems = surgeryChecklist.filter((i) => i.parameter).length;
-  const compliantCount = surgeryChecklist.filter((i) => i.compliant === "Y").length;
-  const compliancePercent = totalItems ? Math.round((compliantCount / totalItems) * 100) : 0;
-
   const handleSubmitSurgeryQA = async () => {
+    const totalItems = surgeryChecklist.filter((i) => i.parameter).length;
+    const compliantCount = surgeryChecklist.filter((i) => i.compliant === "Y").length;
+    const compliancePercent = totalItems ? Math.round((compliantCount / totalItems) * 100) : 0;
+
     const payload = {
       date: surgeryDate,
       auditor,
@@ -131,15 +98,7 @@ export const DashboardPage = () => {
     };
 
     try {
-      await fetch(`${API_BASE_URL}/surgeryqa`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
+      await API.post("/api/surgeryqa", payload); // ✅ include /api
       localStorage.setItem("surgeryQAReport", JSON.stringify(payload));
       alert("✅ Surgery QA Checklist saved successfully!");
       navigate("/reports");
@@ -149,10 +108,20 @@ export const DashboardPage = () => {
     }
   };
 
+  // -------------------- Dashboard Cards --------------------
+  const cards = [
+    { name: "Total Checklists", value: stats.totalChecklists ?? 0, icon: FileCheck, color: "stat-icon blue" },
+    { name: "Completed Items", value: stats.completedItems ?? 0, icon: TrendingUp, color: "stat-icon green" },
+    { name: "Pending Reviews", value: stats.pendingReviews ?? 0, icon: Clock, color: "stat-icon amber" },
+    { name: "Active Users", value: stats.activeUsers ?? 0, icon: Users, color: "stat-icon purple" },
+    { name: "Admins", value: stats.totalAdmins ?? 0, icon: Users, color: "stat-icon pink" },
+    { name: "New Signups (7d)", value: stats.recentSignups ?? 0, icon: TrendingUp, color: "stat-icon orange" },
+  ];
+
   return (
     <Layout title="Dashboard">
       <div className="dashboard-container">
-        {/* ✅ Welcome Header */}
+        {/* Welcome Header */}
         <div className="welcome-header">
           <h2>Welcome, {user?.name} 👋</h2>
           <p>You are logged in as <b>{user?.role}</b></p>
@@ -167,7 +136,7 @@ export const DashboardPage = () => {
           </div>
         ) : (
           <>
-            {/* ✅ Stats Grid */}
+            {/* Stats Grid */}
             <div className="stats-grid">
               {cards.map((stat) => (
                 <div key={stat.name} className="stat-card">
@@ -184,7 +153,7 @@ export const DashboardPage = () => {
               ))}
             </div>
 
-            {/* ✅ Quick Actions */}
+            {/* Quick Actions */}
             <div className="quick-actions">
               <div className="quick-actions-header">Quick Actions</div>
               <div className="quick-actions-grid">
@@ -192,7 +161,7 @@ export const DashboardPage = () => {
                   <div className="flex-between">
                     <div>
                       <h4>NC Checklist</h4>
-                      <p>Create and manage your non-conformity checklists</p>
+                      <p>Create and manage non-conformity checklists</p>
                     </div>
                     <FileCheck className="h-8 w-8 text-white" />
                   </div>
@@ -268,46 +237,15 @@ export const DashboardPage = () => {
                   </div>
                 </Link>
 
-                 <Link to="/qualitydashboard" className="quick-action-card bg-green-gradient">
+                <Link to="/qualitydashboard" className="quick-action-card bg-green-gradient">
                   <div className="flex-between">
                     <div>
                       <h4>Quality - Dashboard</h4>
-                      <p>View and analyse charts.</p>
+                      <p>View and analyze charts.</p>
                     </div>
                     <BarChart3 className="h-8 w-8 text-white" />
                   </div>
                 </Link>
-              </div>
-            </div>
-
-            {/* ✅ Recent Activity */}
-            <div className="recent-activity">
-              <div className="recent-header">
-                <Activity className="h-5 w-5 text-gray-500" />
-                <h3>Recent Activity</h3>
-              </div>
-              <div className="recent-list">
-                <div className="activity-item">
-                  <div className="activity-dot dot-green"></div>
-                  <div className="activity-text">
-                    <p className="activity-title">New checklist item created: "Equipment Safety Check"</p>
-                    <p className="activity-time">2 minutes ago</p>
-                  </div>
-                </div>
-                <div className="activity-item">
-                  <div className="activity-dot dot-blue"></div>
-                  <div className="activity-text">
-                    <p className="activity-title">File uploaded for "Quality Control Verification"</p>
-                    <p className="activity-time">15 minutes ago</p>
-                  </div>
-                </div>
-                <div className="activity-item">
-                  <div className="activity-dot dot-amber"></div>
-                  <div className="activity-text">
-                    <p className="activity-title">Checklist item updated: "Process Documentation"</p>
-                    <p className="activity-time">1 hour ago</p>
-                  </div>
-                </div>
               </div>
             </div>
           </>
@@ -316,4 +254,3 @@ export const DashboardPage = () => {
     </Layout>
   );
 };
- 

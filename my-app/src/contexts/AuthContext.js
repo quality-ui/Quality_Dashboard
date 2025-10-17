@@ -1,25 +1,19 @@
 import React, { createContext, useState, useContext } from "react";
-import axios from "axios";
+import API from "../api/axiosInstance"; // Use centralized Axios
 
 const AuthContext = createContext();
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || "/api";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user")) || null);
   const [token, setToken] = useState(() => localStorage.getItem("token") || null);
 
-  const api = axios.create({ baseURL: API_BASE_URL });
-
-  api.interceptors.request.use((config) => {
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-  });
-
+  // Login function
   const login = async (email, password, isAdmin) => {
     try {
-      const endpoint = isAdmin ? "/auth/admin/login" : "/auth/login";
-      const res = await api.post(endpoint, { email, password });
+      // Add /api here in the endpoint
+      const endpoint = isAdmin ? "/api/auth/admin/login" : "/api/auth/login";
+      const res = await API.post(endpoint, { email, password });
+
       if (res.data.success) {
         setUser(res.data.user);
         setToken(res.data.token);
@@ -27,6 +21,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("token", res.data.token);
         return { success: true, role: res.data.user.role };
       }
+
       return { success: false, message: res.data.message };
     } catch (err) {
       console.error("Login error:", err);
@@ -42,7 +37,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, api }}>
+    <AuthContext.Provider value={{ user, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
